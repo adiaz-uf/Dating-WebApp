@@ -15,11 +15,11 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <Input type="email" placeholder="you@example.com" className="focus:ring-pink-500 focus:border-pink-500" />
+              <Input type="email" placeholder="you@example.com" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <Input type="password" placeholder="••••••••" className="focus:ring-pink-500 focus:border-pink-500" />
+              <Input type="password" placeholder="••••••••"/>
             </div>
           </div>
           <Button className="w-full">

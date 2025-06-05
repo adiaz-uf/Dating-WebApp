@@ -1,7 +1,5 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 1rem;
   text-align: center;
 }
 
@@ -39,4 +37,31 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Scrollbar styles */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin; 
+  }
+
+  .scrollbar-thumb-rounded {
+    scrollbar-color: #db2777 transparent; 
+  }
+
+  .scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background-color: #db2777; /* pink-600 */
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
 }

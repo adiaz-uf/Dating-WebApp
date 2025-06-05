@@ -1,10 +1,11 @@
 import { Navbar } from "../components/Navbar";
+import type { ReactNode } from "react";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen flex items-center justify-center bg-pink-50 px-4">{children}</main>
+      <main className="min-h-screen flex flex-col items-center px-4 mt-20">{children}</main>
     </>
   );
 }

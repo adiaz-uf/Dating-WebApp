@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Browse", href: "/browse" },
-  { label: "Chats", href: "/chat" },
+  { label: "Chats", href: "/chats" },
   { label: "Profile", href: "/profile" },
 ];
 
@@ -13,7 +13,7 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="bg-pink-50 shadow-md fixed top-0 left-0 w-full z-50">
+    <header className="bg-pink-50 shadow-md fixed top-0 left-0 w-full z-50 py-1">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <h1 className="text-xl font-bold text-pink-600">Matcha</h1>
@@ -24,7 +24,7 @@ export const Navbar = () => {
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle Menu"
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+          {isOpen ? <X size={30} /> : <Menu size={30} />}
         </button>
 
         {/* Desktop links */}
@@ -44,7 +44,7 @@ export const Navbar = () => {
       {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden bg-pink-50 border-t border-pink-100">
-          <nav className="flex flex-col space-y-2 p-4">
+          <nav className="flex flex-col space-y-4 p-4">
             {navLinks.map(({ label, href }) => (
               <Link
                 key={href}
