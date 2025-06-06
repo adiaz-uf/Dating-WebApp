@@ -11,9 +11,11 @@ import { MessageBox } from "../components/MessageBox";
 
 export default function RegisterPage() {
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const [name, setName] = useState<string>("");
+  const [first_name, setFirstName] = useState<string>("");
+  const [last_name, setLastName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [new_password, setNewPassword] = useState<string>("");
   const [repeat_password, setRepeatPassword] = useState<string>("");
@@ -31,8 +33,8 @@ export default function RegisterPage() {
     return regex.test(em);
   }
 
-  function handleRegister() {
-    if (!email  || !new_password || !repeat_password || !name) {
+  const handleRegister = () => {
+    if (!email  || !new_password || !repeat_password || !first_name || !last_name || !username) {
       setError("Please fill all fields.");
       setSuccess(false);
       setTimeout(() => setError(null), 4000);
@@ -70,7 +72,7 @@ export default function RegisterPage() {
     setTimeout(() => {
       setSuccess(false);
       navigate("/login");
-    }, 4000);
+    }, 3000);
   }
 
   return (
@@ -85,8 +87,16 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-semibold text-center text-pink-600">Create Account</h1>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <Input placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)}/>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fisrt Name</label>
+              <Input placeholder="John" value={first_name} onChange={(e) => setFirstName(e.target.value)}/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+              <Input placeholder="Doe" value={last_name} onChange={(e) => setLastName(e.target.value)}/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <Input placeholder="Johndoe123" value={username} onChange={(e) => setUsername(e.target.value)}/>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>

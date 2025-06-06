@@ -69,6 +69,8 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
     }, 1000 + Math.random() * 2000);
   };
 
+  const handleUpload = () => {}
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -107,23 +109,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
             </span>
           </div>
           
-          {messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sent ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-xs px-4 py-2 rounded-lg shadow ${
-                  message.sent
-                    ? "bg-pink-200 text-right text-black"
-                    : "bg-gray-100 text-left text-black"
-                }`}
-              >
-                <div className="text-sm">{message.text}</div>
-                <div className="text-xs text-gray-500 mt-1">{message.time}</div>
-              </div>
-            </div>
-          ))}
           {messages.map((message) => (
             <div
               key={message.id}
@@ -147,6 +132,9 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       {/* Message input */}
       <div className="p-3 px-5 border-t border-divider shadow-md border-pink-200 mt-auto">
         <div className="flex items-end gap-2">
+          <Button onClick={handleUpload}>
+            +
+          </Button>
           <Input
             type="message"
             placeholder="Type a message..."

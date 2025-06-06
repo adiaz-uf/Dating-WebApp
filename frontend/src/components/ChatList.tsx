@@ -26,7 +26,7 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
   return (
     <div className="flex flex-col h-full overflow-auto scrollbar-thin">
       <div className="p-4">
-        <h1 className="text-xl font-semibold mb-4">Messages</h1>
+        <h1 className="text-xl font-semibold my-2">Chats</h1>
       </div>
       
         <div className="py-2">
@@ -34,14 +34,17 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
             filteredChats.map((chat) => (
               <div
                 key={chat.id}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                  selectedChatId === chat.id 
-                    ? "bg-primary-50 dark:bg-primary-900/20" 
+                className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border border-gray-300 border-b-0 border-r-0 ${
+                  selectedChatId === chat.id  
+                    ? "bg-pink-100 dark:bg-pink-400/15" 
                     : "hover:bg-default-100"
                 }`}
                 onClick={() => onSelectChat(chat.id)}
               >     
-                <img src="vite.svg" className="w-10 bg-pink-300 rounded-full"/>
+                <div className="relative w-10 h-10">
+                  <img src="vite.svg" className="w-full h-full bg-pink-300 rounded-full"/>{/* TODO: Profile Pic */}
+                  <span className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full"></span>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium text-foreground truncate">{chat.name}</h3>

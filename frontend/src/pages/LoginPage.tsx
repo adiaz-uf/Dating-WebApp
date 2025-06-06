@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
@@ -24,34 +24,24 @@ export default function LoginPage() {
     return regex.test(pw);
   }
 
-  function validateEmail(em: string): boolean {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(em);
+  // TODO
+  const handleResetPassword = () => {
+
   }
 
-  function handleLogin() {
-    if (!email || !password) {
-      setError("Please fill in both email and password.");
+  const handleLogin = () => {
+    if (!username || !password) {
+      setError("Please fill in both username and password.");
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
     }
-
-
 
     /* Password validation - TODO: Commented while developing */
     /* if (!validatePassword(password)) {
       setError(
         "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
       );
-      setSuccess(false);
-      setTimeout(() => setError(null), 3000);
-      return;
-    } */
-
-    /* email validation - TODO: Commented while developing */
-    /* if (!validateEmail(email)) {
-      setError("Invalid email format. Please enter a valid email address.");
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
@@ -78,8 +68,8 @@ export default function LoginPage() {
           <h1 className="text-2xl font-semibold text-center text-pink-600">Welcome Back</h1>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <Input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)}/>
+              <label className="block text-sm font-medium text-gray-700 mb-1">username</label>
+              <Input type="username" placeholder="example123" value={username} onChange={(e) => setUsername(e.target.value)}/>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -88,6 +78,9 @@ export default function LoginPage() {
           </div>
           <Button className="w-full" onClick={handleLogin}>
             Log In
+          </Button>
+          <Button className="w-full" variant="outline" onClick={handleResetPassword}>
+            Reset Password
           </Button>
           <p className="text-sm text-center text-gray-500">
             Don’t have an account?{" "}

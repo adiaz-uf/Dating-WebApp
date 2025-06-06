@@ -7,6 +7,7 @@ const navLinks = [
   { label: "Browse", href: "/browse" },
   { label: "Chats", href: "/chats" },
   { label: "Profile", href: "/profile" },
+  { label: "Logout", href: "/logout" },
 ];
 
 export const Navbar = () => {
@@ -20,7 +21,7 @@ export const Navbar = () => {
 
         {/* Toggle (mobile) */}
         <button
-          className="md:hidden text-pink-600"
+          className="md:hidden text-pink-600 mr-2"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle Menu"
         >
