@@ -1,33 +1,31 @@
 import { useState } from "react";
-import { FaEye, FaMedal, FaHeart  } from "react-icons/fa";
-import { FaRegHeart } from "react-icons/fa6";
-import { BiSolidDislike } from "react-icons/bi";
-import { BiDislike } from "react-icons/bi";
-import { MdOutlineReportProblem } from "react-icons/md";
-
-import { Button } from "../components/Button";
-import MainLayout from "../layouts/MainLayout";
 import { useProfile } from "../features/profile/useProfile";
+import MainLayout from "../layouts/MainLayout";
 import EditProfileModal from "../features/profile/EditProfileModal";
 import { ProfileInfoCard } from "../features/profile/ProfileInfoCard";
 import Avatar from "../components/Avatar";
 import { MessageBox } from "../components/MessageBox";
 import ProfileInteractionsModal from "../features/profile/ProfileInteractionsModal";
+import { Button } from "../components/Button";
+import { FaEye, FaMedal, FaHeart  } from "react-icons/fa";
+import { FaRegHeart } from "react-icons/fa6";
+import { BiSolidDislike } from "react-icons/bi";
+import { BiDislike } from "react-icons/bi";
+import { MdOutlineReportProblem } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
-function calculateAge(birthdate: string | Date): number {
+function calculateAge(birthdate: string | Date | undefined | null): number | null {
+  if (!birthdate) return null;
   const birth = new Date(birthdate);
+  if (isNaN(birth.getTime())) return null;
   const today = new Date();
-
   let age = today.getFullYear() - birth.getFullYear();
   const m = today.getMonth() - birth.getMonth();
-
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
-
-  return age;
+  return age >= 0 && age < 120 ? age : null;
 }
-
 export default function ProfilePage() {
   const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
   const [showEdit, setShowEdit] = useState(false);
@@ -35,10 +33,17 @@ export default function ProfilePage() {
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  if (!userProfile) return <div>Loading...</div>;
+  if (!userProfile) return <div>No profile data.</div>;
 
-  const age = calculateAge(userProfile.birthdate);
+  // Map backend fields to frontend expected fields
+  const name = userProfile.first_name || "";
+  const lastName = userProfile.last_name || "";
+  const bio = userProfile.biography || "";
+  // Try to get birthdate from multiple possible fields
+  const birthdate = userProfile.birth_date || null;
+  const age = calculateAge(birthdate);
 
   return (
     <MainLayout>
@@ -83,9 +88,9 @@ export default function ProfilePage() {
                   viewBox="0 0 24 24" 
                   fill="none" 
                   stroke="currentColor"
-                  stroke-width="2" 
-                  stroke-linecap="round" 
-                  stroke-linejoin="round"
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                   className="text-pink-600 hover:text-pink-700"
                 >
                   <circle cx="12" cy="12" r="3"></circle>
@@ -180,41 +185,45 @@ export default function ProfilePage() {
           </div>
         )}
         <div className="flex flex-wrap gap-3 items-center my-6">
-          <h1 className="text-4xl font-semibold leading-none">{userProfile.name}</h1>
+          <h1 className="text-3xl font-semibold leading-none">{name || "No name"} {lastName}</h1>
           <span className="text-3xl font-semibold translate-y-[1px]"> - </span>
-          <h2 className="text-2xl font-semibold translate-y-[2px]">{age}</h2>
+          <h2 className="text-2xl font-semibold translate-y-[2px]">{age !== null ? age : ""}</h2>
         </div>
         <p className="text-xl max-w-200 mb-6 break-words overflow-hidden">
-          {userProfile.bio}
+          {bio}
         </p>
         {/* Tags List */}
         <div className="flex flex-wrap gap-3 justify-center">
           <label 
             className="text-purple-600 bg-purple-200 border border-purple-600 rounded-3xl px-2.5 pb-1">
-            {userProfile.gender}
+            {userProfile.gender || ""}
           </label>
           <label 
             className="text-purple-600 bg-purple-200 border border-purple-600 rounded-3xl px-2.5 pb-1">
-            {userProfile.sexual_orinetation}
+            {userProfile.sexual_preferences || ""}
           </label>
-          {userProfile.tags.map((tag, index) => (
+          {(userProfile.tags || []).map((tag, index) => (
             <label 
               key={index} 
               className="text-pink-600 bg-pink-100 border border-pink-600 rounded-3xl px-2.5 pb-1">
-                {tag}
+                {tag || ""}
               </label>
           ))}
         </div>
         {/* User Images List */}
         <div className="flex flex-wrap gap-5 items-center justify-center my-8">
-          {userProfile.images.map((imageUrl, index) => (
-            <img 
-              key={index} 
-              src={imageUrl}
-              className="w-70 h-70 bg-pink-300 rounded-md border"
-              alt={`User image ${index + 1}`}
-            />
-          ))}
+          {(userProfile?.images || [])
+            .filter(imageUrl => imageUrl !== userProfile.main_img) // Filtrar la foto de perfil
+            .map((imageUrl, index) => (
+              imageUrl ? (
+                <img 
+                  key={index} 
+                  src={imageUrl}
+                  className="w-70 h-70 bg-pink-300 rounded-md border"
+                  alt={`User image ${index + 1}`}
+                />
+              ) : null
+            ))}
         </div>
         {isOwnProfile && (
           <ProfileInfoCard/>

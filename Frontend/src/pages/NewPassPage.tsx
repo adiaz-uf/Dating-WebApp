@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation  } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { MessageBox } from "../components/MessageBox";
+import { resetPass } from "../api/auth_service";
 
 export default function NewPassPage() {
 
@@ -17,6 +18,10 @@ export default function NewPassPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+
   function validatePassword(pw: string): boolean {
     const regex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -24,7 +29,7 @@ export default function NewPassPage() {
   }
 
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!new_password || !repeat_password) {
       setError("Please fill all fields.");
       setSuccess(false);
@@ -49,13 +54,19 @@ export default function NewPassPage() {
       return;
     } */
 
-    // Simulate successful login
-    setError(null);
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      navigate("/login");
-    }, 3000);
+    try {
+      await resetPass({
+        token: token || "",
+        new_password: new_password,
+      });
+
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || "Could not update password");
+    }
   }
 
   return (

@@ -8,6 +8,8 @@ import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Link } from "react-router-dom";
 import { MessageBox } from "../components/MessageBox";
+import { loginUser } from "../api/auth_service";
+import { API_URL } from "../api/config";
 
 export default function LoginPage() {
 
@@ -26,10 +28,10 @@ export default function LoginPage() {
 
   // TODO
   const handleResetPassword = () => {
-
+    navigate("/reset-pass");
   }
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       setError("Please fill in both username and password.");
       setSuccess(false);
@@ -47,13 +49,19 @@ export default function LoginPage() {
       return;
     } */
 
-    // Simulate successful login
-    setError(null);
-    setSuccess(true);
-    setTimeout(() => {
+    // send register POST
+    try {
+      await loginUser({ username, password});
+
+      setSuccess(true);
+      setError(null);
+      setTimeout(() => { setSuccess(false); navigate("/"); }, 3000);
+
+    } catch (err: any) {
+      setError(err.message);
       setSuccess(false);
-      navigate("/");
-    }, 2500);
+      setTimeout(() => setError(null), 3000);
+    }
   }
 
   return (
@@ -79,6 +87,33 @@ export default function LoginPage() {
           <Button className="w-full" onClick={handleLogin}>
             Log In
           </Button>
+          <div className="flex gap-2">
+          <Button
+            className="w-full flex items-center justify-center gap-2"
+            variant="outline"
+            onClick={() => window.location.href = `${API_URL}/oauth/google`}
+          >
+            Google
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+          </Button>
+
+          <Button
+            className="w-full flex items-center justify-center gap-2"
+            variant="outline"
+            onClick={() => window.location.href = `${API_URL}/oauth/intra42`}
+          >
+            Intra
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/8d/42_Logo.svg"
+              alt="Intra42"
+              className="w-5 h-5"
+            />
+          </Button>
+          </div>
           <Button className="w-full" variant="outline" onClick={handleResetPassword}>
             Reset Password
           </Button>

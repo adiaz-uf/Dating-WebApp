@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useProfile } from "./useProfile";
-import { useProfileContext } from "./ProfileContext";
+import { useProfile } from "../profile/useProfile";
+import { useProfileContext } from "../profile/ProfileContext";
 import { Button } from "../../components/Button";
-import { Input } from "../../components/Input";
+import { MessageBox } from "../../components/MessageBox";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
 
@@ -42,33 +42,40 @@ const ResizableInput = ({ value, onChange }: { value: string; onChange: (val: st
   );
 };
 
-interface EditProfileModalProps {
+interface EditDataModalProps {
   onClose: () => void;
   onSaveSuccess?: () => void;
   onSaveError?: (msg: string) => void;
 }
 
-export default function EditProfileModal({
+export default function EditDataModal({
   onClose,
   onSaveSuccess,
   onSaveError,
-}: EditProfileModalProps) {
+}: EditDataModalProps) {
   const { userProfile } = useProfile();
   const ctx = (() => { try { return useProfileContext(); } catch { return null; } })();
 
   if (!userProfile) return <div>Loading...</div>;
 
+  const [birth_date, setBirthdate] = useState(userProfile.birth_date || "");
   const [bio, setBio] = useState(userProfile.biography || "");
   const [tags, setTags] = useState(userProfile.tags || []);
   const [images, setImages] = useState(userProfile.images || []);
-  const [name, setName] = useState(userProfile.first_name || "");
-  const [lastName, setLastName] = useState(userProfile.last_name || "");
-  const [email, setEmail] = useState(userProfile.email || "");
   const [gender, setGender] = useState(userProfile.gender || "");
   const [sexualOrientation, setSexualOrientation] = useState(userProfile.sexual_preferences || "");
   const [showGenderOptions, setShowGenderOptions] = useState(false);
   const [showOrientationOptions, setShowOrientationOptions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
 
+  useEffect(() => {
+    if (error) {
+      setShowError(true);
+      const timer = setTimeout(() => setShowError(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleTagChange = (index: number, newValue: string) => {
     const newTags = [...tags];
@@ -76,17 +83,7 @@ export default function EditProfileModal({
     setTags(newTags);
   };
 
-  const removeImage = async (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    setImages(newImages);
-    
-    if (ctx && ctx.setUserProfile && userProfile) {
-      ctx.setUserProfile({
-        ...userProfile,
-        images: newImages
-      });
-    }
-  };
+  // Removed unused functions as we now handle images directly with API calls
 
   const handleGenreChange = (newValue: string) => {
     setGender(newValue);
@@ -98,14 +95,27 @@ export default function EditProfileModal({
 
   const handleSave = async () => {
     try {
+      if (!birth_date) {
+        setError("Please select your birth date");
+        return;
+      }
+
+      if (!gender) {
+        setError("Please select your gender");
+        return;
+      }
+
+      if (!sexualOrientation) {
+        setError("Please select your sexual orientation");
+        return;
+      }
+
       const updatedProfile = {
         ...userProfile,
         biography: bio,
+        birth_date,
         tags,
         images,
-        first_name: name,
-        last_name: lastName,
-        email,
         gender,
         sexual_preferences: sexualOrientation,
       };
@@ -113,7 +123,7 @@ export default function EditProfileModal({
       console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
 
-      // Update global context if available
+      // Update global context
       if (ctx && ctx.setUserProfile) {
         ctx.setUserProfile(updatedProfile);
       }
@@ -121,8 +131,7 @@ export default function EditProfileModal({
       onSaveSuccess?.();
       onClose();
     } catch (error: any) {
-      onSaveError?.(error.message || "An unknown error occurred.");
-      onClose();
+      setError(error.message || "An unknown error occurred.");
     }
   };
 
@@ -130,7 +139,7 @@ export default function EditProfileModal({
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
       <div className="bg-pink-50 rounded-3xl p-6 mx-2 w-full max-w-2xl shadow-xl overflow-y-auto scroll-hidden max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-pink-600">Edit Profile</h2>
+        <h2 className="text-2xl font-semibold text-pink-600">Welcome to Matcha!</h2>
           <button
             onClick={onClose}
             className="text-3xl font-bold text-gray-400 hover:text-pink-600"
@@ -139,14 +148,18 @@ export default function EditProfileModal({
           </button>
         </div>
 
+        <label className="block text-2xl font-semibold text-pink-600 mb-5">
+        Please, complete your profile.
+        </label>
+
         <div className="mb-6 text-center">
           <img
             src={userProfile.main_img}
-            alt="Avatar"
+            alt=""
             className="mx-auto w-30 h-30 rounded-full object-cover bg-pink-200 mb-2"
           />
           <label className="text-pink-600 underline cursor-pointer">
-            Update Profile Picture
+            Select an Image
             <input
               type="file"
               accept="image/*"
@@ -154,20 +167,11 @@ export default function EditProfileModal({
               onChange={async (e) => {
                 if (e.target.files && e.target.files[0]) {
                   try {
-                    const oldMainImg = userProfile.main_img;
-                    await uploadProfilePicture(e.target.files[0]);
+                    const url = await uploadProfilePicture(e.target.files[0]);
                     // Reload profile
                     const { profile } = await fetchUserProfile();
-                    // Remove the old profile picture from images array
-                    if (oldMainImg) {
-                      const newImages = images.filter(img => img !== oldMainImg);
-                      setImages(newImages);
-                    }
                     if (ctx && ctx.setUserProfile) {
-                      ctx.setUserProfile({
-                        ...profile,
-                        images: images.filter(img => img !== oldMainImg)
-                      });
+                      ctx.setUserProfile(profile);
                     }
                   } catch (error: any) {
                     onSaveError?.(error.message || "Error uploading profile picture");
@@ -177,6 +181,16 @@ export default function EditProfileModal({
             />
           </label>
         </div>
+
+        <div className="mb-6 text-center">
+					<label className="block text-md font-medium mb-1 text-pink-600">Birthdate</label>
+					<input
+							type="date"
+							value={birth_date}
+							onChange={(e) => setBirthdate(e.target.value)}
+							className="px-4 py-2 border border-pink-400 rounded-md text-pink-600 bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
+					/>
+				</div>
 
         <div className="mb-6 flex flex-col justify-center items-center gap-2">
           <label className="block text-md font-medium mb-1">Bio</label>
@@ -280,10 +294,10 @@ export default function EditProfileModal({
                     onClick={async () => {
                       try {
                         await deletePicture(img);
-                        // update local state
+                        // Actualizar el estado local
                         const newImages = images.filter(image => image !== img);
                         setImages(newImages);
-                        // update context
+                        // Actualizar el contexto
                         if (ctx && ctx.setUserProfile && userProfile) {
                           ctx.setUserProfile({
                             ...userProfile,
@@ -343,36 +357,17 @@ export default function EditProfileModal({
           </div>
         </div>
 
-        <div className="my-8 space-y-4">
-          <div>
-            <label className="block text-md font-medium">First Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full md:w-120"
+        <div className="flex flex-col items-center gap-4">
+          {error && (
+            <MessageBox
+              type="error"
+              message={error}
+              show={showError}
             />
+          )}
+          <div className="text-center">
+            <Button onClick={handleSave}>Save Changes</Button>
           </div>
-          <div>
-            <label className="block text-md font-medium">Last Name</label>
-            <Input
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full md:w-120"
-            />
-          </div>
-          <div>
-            <label className="block text-md font-medium">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full md:w-120"
-            />
-          </div>
-        </div>
-
-        <div className="text-center">
-          <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </div>
     </div>

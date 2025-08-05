@@ -1,4 +1,6 @@
 export interface UserProfile {
+  sexual_preferences: string;
+  first_name: string;
   id: string;
   username: string;
   gender: string;
@@ -6,12 +8,12 @@ export interface UserProfile {
   name: string;
   last_name: string;
   email: string;
-  bio: string;
+  biography: string;
+  birth_date: string;
   tags: string[];
   images: string[];
   isOnline: boolean;
   main_img: string; // TODO: delete when bbdd -> test
-  birthdate: string;
   liked: boolean; //test
   disliked: boolean; //test
 }

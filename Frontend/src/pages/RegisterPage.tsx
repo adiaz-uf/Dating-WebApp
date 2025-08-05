@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+
 import AuthLayout from "../layouts/AuthLayout";
 import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
-import { Link } from "react-router-dom";
 import { MessageBox } from "../components/MessageBox";
+import { registerUser } from "../api/auth_service";
 
 export default function RegisterPage() {
 
@@ -67,47 +68,20 @@ export default function RegisterPage() {
     } */
 
     // send register POST
-    setError(null);
-    setSuccess(true);
-    setTimeout(() => {
+    try {
+      await registerUser({ username, password: new_password,
+        email, first_name, last_name,
+      });
+
+      setSuccess(true);
+      setError(null);
+      setTimeout(() => { setSuccess(false); navigate("/login"); }, 2000);
+
+    } catch (err: any) {
+      setError(err.message);
       setSuccess(false);
-      navigate("/login");
-    }, 3000);
-
-      try {
-        const response = await fetch("/auth/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            first_name,
-            last_name,
-            username,
-            email,
-            password: new_password,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setSuccess(true);
-          setError(null);
-          setTimeout(() => {
-            setSuccess(false);
-            navigate("/login");
-          }, 3000);
-        } else {
-          setError(data.message || "Registration failed");
-          setSuccess(false);
-          setTimeout(() => setError(null), 4000);
-        }
-      } catch (err) {
-        setError("Server error, try again later");
-        setSuccess(false);
-        setTimeout(() => setError(null), 4000);
-      }
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   return (

@@ -6,27 +6,30 @@ import { FaBell } from "react-icons/fa";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "./Button";
 
-const userId = "abc123"
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Browse", href: "/browse" },
-  { label: "Chats", href: "/chats" },
-  { label: "Profile", href: `/profile/${userId}` },
-  { label: "Logout", href: "/logout" },
-];
-
-type Notification = {
-  id: string;
-  message: string;
-  read: boolean;
+type NavbarProps = {
+  notifications: Notification[];
+  userId: string;
 };
 
-export const Navbar = ({ notifications }: { notifications: Notification[] }) => {
+export const Navbar = ({ notifications, userId }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate(); 
-  
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const navLinks = [
+    { label: "Home", href: "/" },
+    { label: "Browse", href: "/browse" },
+    { label: "Chats", href: "/chats" },
+    { label: "Profile", href: "/profile" },
+    { label: "Logout", href: "/logout" },
+  ];
+
+  type Notification = {
+    id: string;
+    message: string;
+    read: boolean;
+  };
 
   return (
     <header className="bg-pink-50 shadow-md fixed top-0 left-0 w-full z-50 py-1 overflow-hidden">

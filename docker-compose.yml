@@ -68,23 +68,23 @@ services:
         - "5173"
     restart: on-failure
   
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:latest
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL} 
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      TZ: ${TIMEZONE}
-    ports:
-      - "8080:80"    # localhost:8080
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - matcha-network
-    restart: always
-    depends_on:
-      postgresql:
-        condition: service_healthy
+#  pgadmin:
+#    container_name: pgadmin
+#    image: dpage/pgadmin4:latest
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL} 
+#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+#      TZ: ${TIMEZONE}
+#    ports:
+#      - "8080:80"    # localhost:8080
+#    volumes:
+#      - pgadmin_data:/var/lib/pgadmin
+#    networks:
+#      - matcha-network
+#    restart: always
+#    depends_on:
+#      postgresql:
+#        condition: service_healthy
 
 volumes:
     postgresql_volume:

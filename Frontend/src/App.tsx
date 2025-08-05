@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ProfileProvider } from "./features/profile/ProfileContext";
 import './App.css'
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -27,7 +28,6 @@ function Logout() {
 
 
 function App() {
-    
   return (
     <BrowserRouter>
       <Routes>
@@ -36,6 +36,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/chats" element={<ChatsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/profile" element={<ProfileRouteWrapper />} />
         <Route path="/profile/:userId" element={<ProfileRouteWrapper />} />
         <Route path="/reset-pass" element={<ResetPassPage />} />
         <Route path="/new-pass" element={<NewPassPage />} />

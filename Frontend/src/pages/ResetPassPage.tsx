@@ -7,6 +7,7 @@ import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { MessageBox } from "../components/MessageBox";
+import { requestResetPass } from "../api/auth_service";
 
   function validateEmail(em: string): boolean {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,7 +23,7 @@ export default function ResetPassPage() {
   const [success, setSuccess] = useState<boolean>(false);
 
   // TODO
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!email) {
       setError("Please fill in email");
       setSuccess(false);
@@ -38,20 +39,25 @@ export default function ResetPassPage() {
       return;
     } */
 
-    // TODO: send email token
-    setError(null);
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      navigate("/new-pass");
-    }, 2500);
+  try {
+      console.log("debug: go to request_resetpass");
+      await requestResetPass(email);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        navigate("/login");
+      }, 2500);
+    } catch (err: any) {
+      setError(err.message || "Could not send reset email");
+      setTimeout(() => setError(null), 3000);
+    }
   }
 
   return (
     <div className="relative min-h-screen">
     <div className="absolute top-4 right-4 z-50 space-y-2">
       {error && <MessageBox type="error" message={error} show={!!error} />}
-      {success && <MessageBox type="success" message="Confirmed Email! Redirecting..." show={success} />}
+      {success && <MessageBox type="success" message="Check your email to change your password!" show={success} />}
     </div>
     <AuthLayout>
       <Card className="shadow-lg rounded-2xl">
