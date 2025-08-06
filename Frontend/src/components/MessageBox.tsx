@@ -15,7 +15,7 @@ export const MessageBox: React.FC<MessageBoxProps> = ({ type, message, show }) =
     if (show) {
       setVisible(true);
     } else {
-      const timeout = setTimeout(() => setVisible(false), 300);
+      const timeout = setTimeout(() => setVisible(false), 200);
       return () => clearTimeout(timeout);
     }
   }, [show]);

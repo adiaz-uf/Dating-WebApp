@@ -59,13 +59,12 @@ export default function RegisterPage() {
       return;
     } */
 
-    /* email validation - TODO: Commented while developing */
-    /* if (!validateEmail(email)) {
+    if (!validateEmail(email)) {
       setError("Invalid email format. Please enter a valid email address.");
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
-    } */
+    }
 
     // send register POST
     try {
@@ -88,7 +87,7 @@ export default function RegisterPage() {
     <div className="relative min-h-screen">
       <div className="absolute top-4 right-4 z-50 space-y-2">
       {error && <MessageBox type="error" message={error} show={!!error} />}
-      {success && <MessageBox type="success" message="Created account! You can Sign In now." show={success} />}
+      {success && <MessageBox type="success" message="Created account! Please confirm your email." show={success} />}
     </div>
     <AuthLayout>
       <Card className="shadow-lg rounded-2xl">

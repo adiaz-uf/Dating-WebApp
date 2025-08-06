@@ -21,7 +21,7 @@ build: volumes
 	@echo "$(GREEN) --- BUILDING CONTAINERS  --- $(COLOR_OFF)"
 	@docker compose -f $(DOCKER_COMPOSE) up -d
 
-restart: down
+restart: stop
 	@echo "$(GREEN) --- STARTING CONTAINERS  --- $(COLOR_OFF)"
 	@docker compose -f $(DOCKER_COMPOSE) up -d
 

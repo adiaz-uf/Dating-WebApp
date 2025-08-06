@@ -19,11 +19,15 @@ def login():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
-    success, user = login_user(username, password)
+    success, result = login_user(username, password)
     if success:
-        session["user_id"] = user.id
+        session["user_id"] = result.id
         return jsonify({"success": True, "message": "Logged in"}), 200
     else:
+        # result contains the error message from login_user
+        message = result
+        if message == "Account not verified":
+            return jsonify({"success": False, "message": "Account not confirmed"}), 401
         return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
 

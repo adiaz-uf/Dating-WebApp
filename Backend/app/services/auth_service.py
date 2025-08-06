@@ -15,7 +15,7 @@ def send_confirmation_email(email, token):
 
     mail_from = os.getenv("MAIL_FROM_ADDRESS")
     mail_from_name = os.getenv("MAIL_FROM_NAME")
-    base_url = get_backend_base_url()
+    base_url = get_frontend_base_url()
     confirm_link_base = os.getenv("CONFIRM_ACCOUNT_LINK")
 
     # build link
@@ -127,8 +127,13 @@ def confirm_email(token):
     cur.execute("SELECT id FROM users WHERE confirm_token = %s", (token,))
     row = cur.fetchone()
     if not row:
+        # Check if the token was already used and the account is already confirmed
+        cur.execute("SELECT active_account FROM users WHERE confirm_token IS NULL AND active_account = TRUE")
+        already_confirmed = cur.fetchone()
         cur.close()
         conn.close()
+        if already_confirmed:
+            return False, "Account already confirmed. You can now log in."
         return False, "Invalid or expired token"
 
     user_id = row[0]
@@ -186,8 +191,8 @@ def login_user(username, password):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    user = cur.execute("""
-        SELECT password, active_account 
+    cur.execute("""
+        SELECT password, active_account, id 
         FROM "users" WHERE username = %s
     """, (username,))
 
@@ -198,12 +203,17 @@ def login_user(username, password):
     if not row:
         return False, "User does not exist"
 
-    stored_password_hash, active_account = row
+    stored_password_hash, active_account, user_id = row
 
+    if not check_password_hash(stored_password_hash, password):
+        return False, "Incorrect username or password"
+    
     if not active_account:
         return False, "Account not verified"
 
-    if not check_password_hash(stored_password_hash, password):
-        return False, "Incorrect password"
 
-    return True, user
+    # Return a user object with id (for session)
+    class User:
+        def __init__(self, id):
+            self.id = id
+    return True, User(user_id)

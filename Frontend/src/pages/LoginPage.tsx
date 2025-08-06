@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
@@ -14,11 +14,21 @@ import { API_URL } from "../api/config";
 export default function LoginPage() {
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (location.state && location.state.confirmMsg) {
+      setConfirmMsg(location.state.confirmMsg);
+      // Clean up the state so it doesn't persist on next navigation
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   function validatePassword(pw: string): boolean {
     const regex =
@@ -26,7 +36,6 @@ export default function LoginPage() {
     return regex.test(pw);
   }
 
-  // TODO
   const handleResetPassword = () => {
     navigate("/reset-pass");
   }
@@ -49,7 +58,7 @@ export default function LoginPage() {
       return;
     } */
 
-    // send register POST
+    // send login POST
     try {
       await loginUser({ username, password});
 
@@ -69,6 +78,7 @@ export default function LoginPage() {
     <div className="absolute top-4 right-4 z-50 space-y-2">
       {error && <MessageBox type="error" message={error} show={!!error} />}
       {success && <MessageBox type="success" message="Login successful! Redirecting..." show={success} />}
+      {confirmMsg && <MessageBox type="success" message={confirmMsg} show={!!confirmMsg} />}
     </div>
     <AuthLayout>
       <Card className="shadow-lg rounded-2xl">

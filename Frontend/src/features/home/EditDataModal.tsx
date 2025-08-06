@@ -29,7 +29,6 @@ const ResizableInput = ({
     }
   }, [value]);
 
-  // Sugerencias dinámicas
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!value || value.length < 2) {
@@ -42,7 +41,6 @@ const ResizableInput = ({
       const tags = await suggestTags(q);
       setSuggestions(tags.filter(t => t !== value).slice(0, 5));
     }, 200);
-    // eslint-disable-next-line
   }, [value]);
 
   const handleCommit = () => {

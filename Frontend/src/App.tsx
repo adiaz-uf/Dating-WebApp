@@ -10,6 +10,7 @@ import ResetPassPage from "./pages/ResetPassPage";
 import NewPassPage from "./pages/NewPassPage";
 import ProfileRouteWrapper from "./features/profile/ProfileRouteWrapper";
 import NotificationsPage from "./pages/NotificationsPage";
+import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 
 function Logout() {
     const navigate = useNavigate();
@@ -41,6 +42,7 @@ function App() {
         <Route path="/reset-pass" element={<ResetPassPage />} />
         <Route path="/new-pass" element={<NewPassPage />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
       </Routes>
     </BrowserRouter>
   );
