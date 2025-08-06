@@ -39,6 +39,7 @@ CREATE TABLE tags (
 CREATE TABLE user_tags (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
+    index INTEGER,
     PRIMARY KEY (user_id, tag_id)
 );
 

@@ -4,6 +4,7 @@ from app.Utils.check_uuid import is_valid_uuid
 
 picture_bp = Blueprint("picture", __name__)
 
+# POST 
 @picture_bp.route('/profile-picture', methods=['POST', 'OPTIONS'])
 def upload_profile_picture():
     if request.method == 'OPTIONS':
@@ -33,6 +34,7 @@ def upload_profile_picture():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+# POST
 @picture_bp.route('/', methods=['POST', 'OPTIONS'])
 def upload_picture():
     if request.method == 'OPTIONS':
@@ -62,6 +64,7 @@ def upload_picture():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+# DELETE
 @picture_bp.route('/<filename>', methods=['DELETE', 'OPTIONS'])
 def delete_picture(filename):
     if request.method == 'OPTIONS':

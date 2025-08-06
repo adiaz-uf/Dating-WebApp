@@ -1,4 +1,3 @@
-
 from flask import Blueprint, session, jsonify, request # type: ignore
 from app.services.profile_service import get_profile_data, update_profile_data
 from app.Utils.check_uuid import is_valid_uuid

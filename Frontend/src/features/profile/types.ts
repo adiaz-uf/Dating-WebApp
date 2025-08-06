@@ -1,4 +1,5 @@
 export interface UserProfile {
+  completed_profile: boolean;
   sexual_preferences: string;
   first_name: string;
   id: string;

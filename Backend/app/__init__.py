@@ -3,20 +3,21 @@ from dotenv import load_dotenv # type: ignore
 from flask_cors import CORS # type: ignore
 import os
 
-from .routes.home_routes import home_bp
 from .routes.auth_routes import auth_bp
 from .routes.oauth_routes import oauth_bp
 from .routes.profile_routes import profile_bp
 from .routes.picture_routes import picture_bp
+from .routes.tag_routes import tag_bp
 
 def create_app():
     load_dotenv()
     app = Flask(__name__)
     
-    # Configurar la ruta para servir archivos de uploads
+    # serve files from /uploads
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         return send_from_directory('/uploads', filename)
+
     app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
     CORS(app, supports_credentials=True)
 
@@ -27,10 +28,10 @@ def create_app():
 
     app.config["DEBUG"] = True # TODO: hot-reload
 
-    app.register_blueprint(home_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(oauth_bp, url_prefix="/oauth")
     app.register_blueprint(profile_bp, url_prefix="/profile")
     app.register_blueprint(picture_bp, url_prefix="/pictures")
+    app.register_blueprint(tag_bp, url_prefix="/tag")
 
     return app

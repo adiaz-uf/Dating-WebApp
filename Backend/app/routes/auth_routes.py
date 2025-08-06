@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session # pyright: ignore[reportMissingImports]
+from flask import Blueprint, request, jsonify, session # type: ignore
 from app.services.auth_service import register_user, login_user, confirm_email, reset_password, reset_password_confirm
 
 auth_bp = Blueprint("auth", __name__)

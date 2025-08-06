@@ -6,6 +6,7 @@ import { ProfileProvider } from "../features/profile/ProfileContext";
 import type { UserProfile } from "../features/profile/types";
 import { fetchUserProfile } from "../api/profile_service";
 import EditDataModal from "../features/home/EditDataModal";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false);
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [success, setSuccess] = useState<boolean>(false);
   const [profileData, setProfileData] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -20,8 +22,9 @@ export default function HomePage() {
       try {
         const data = await fetchUserProfile();
         setProfileData(data.profile || data);
+        if (!data) return navigate("/login");
       } catch (err) {
-        console.error(err);
+        return navigate("/login");
       } finally {
         setLoading(false);
       }
@@ -29,15 +32,21 @@ export default function HomePage() {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    if (profileData && profileData.completed_profile === false) {
+      setShowEdit(true);
+    }
+  }, [profileData]);
+
   if (loading) return <div>Loading profile...</div>;
-  if (!profileData) return <div>No profile found.</div>;
+  if (!profileData) return <div>Error loading profile. Please try again later.</div>;
+
 
   return (
     <ProfileProvider profileData={profileData} loggedInUserId={profileData.id}>
       <MainLayout>
         <div className="min-h-screen flex items-center justify-center bg-pink-50">
           <h1 className="text-4xl font-semibold text-pink-600">Welcome to Matcha ❤️</h1>
-          <Button onClick={() => setShowEdit(true)}>update</Button>
           {showEdit && (
             <EditDataModal
               onClose={() => setShowEdit(false)}

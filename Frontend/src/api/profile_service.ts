@@ -25,6 +25,7 @@ export async function updateUserProfile(data: {
   gender?: string;
   birth_date?: string;
   sexual_orientation?: string;
+  completed_profile?: boolean;
 }) {
   const response = await fetch(`${API_URL}/profile/`, {
     method: "POST",

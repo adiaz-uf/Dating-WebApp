@@ -70,7 +70,8 @@ def update_profile_data(user_id, data):
         "biography",
         "birth_date",
         "gender",
-        "sexual_preferences"
+        "sexual_preferences",
+        "completed_profile"
     }
 
     fields_to_update = []

@@ -12,7 +12,6 @@ import { FaRegHeart } from "react-icons/fa6";
 import { BiSolidDislike } from "react-icons/bi";
 import { BiDislike } from "react-icons/bi";
 import { MdOutlineReportProblem } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
 
 function calculateAge(birthdate: string | Date | undefined | null): number | null {
   if (!birthdate) return null;
@@ -33,7 +32,6 @@ export default function ProfilePage() {
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
-  const navigate = useNavigate();
 
   if (!userProfile) return <div>No profile data.</div>;
 
@@ -192,8 +190,9 @@ export default function ProfilePage() {
         <p className="text-xl max-w-200 mb-6 break-words overflow-hidden">
           {bio}
         </p>
+
         {/* Tags List */}
-        <div className="flex flex-wrap gap-3 justify-center">
+        <div className="flex m-4 gap-3">
           <label 
             className="text-purple-600 bg-purple-200 border border-purple-600 rounded-3xl px-2.5 pb-1">
             {userProfile.gender || ""}
@@ -202,13 +201,18 @@ export default function ProfilePage() {
             className="text-purple-600 bg-purple-200 border border-purple-600 rounded-3xl px-2.5 pb-1">
             {userProfile.sexual_preferences || ""}
           </label>
-          {(userProfile.tags || []).map((tag, index) => (
-            <label 
-              key={index} 
-              className="text-pink-600 bg-pink-100 border border-pink-600 rounded-3xl px-2.5 pb-1">
-                {tag || ""}
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center">
+          {(userProfile.tags || []).map((tag, index) => {
+            const tagWithHash = tag && !tag.startsWith('#') ? `#${tag.replace(/^#+/, '')}` : tag;
+            return (
+              <label 
+                key={index} 
+                className="text-pink-600 bg-pink-100 border border-pink-600 rounded-3xl px-2.5 pb-1">
+                  {tagWithHash || ""}
               </label>
-          ))}
+            );
+          })}
         </div>
         {/* User Images List */}
         <div className="flex flex-wrap gap-5 items-center justify-center my-8">

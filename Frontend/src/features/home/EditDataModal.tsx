@@ -5,10 +5,22 @@ import { Button } from "../../components/Button";
 import { MessageBox } from "../../components/MessageBox";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
+import { addTag, suggestTags } from "../../api/tag_service";
 
-const ResizableInput = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+const ResizableInput = ({
+  value,
+  onChange,
+  onCommit,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  onCommit?: (val: string) => void;
+}) => {
   const spanRef = useRef<HTMLSpanElement>(null);
   const [inputWidth, setInputWidth] = useState(0);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (spanRef.current) {
@@ -16,6 +28,27 @@ const ResizableInput = ({ value, onChange }: { value: string; onChange: (val: st
       setInputWidth(width + 4);
     }
   }, [value]);
+
+  // Sugerencias dinámicas
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!value || value.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      const q = value.replace(/^#+/, "");
+      if (q.length < 2) return setSuggestions([]);
+      const tags = await suggestTags(q);
+      setSuggestions(tags.filter(t => t !== value).slice(0, 5));
+    }, 200);
+    // eslint-disable-next-line
+  }, [value]);
+
+  const handleCommit = () => {
+    setShowSuggestions(false);
+    if (onCommit) onCommit(value);
+  };
 
   return (
     <div className="relative inline-block">
@@ -34,10 +67,46 @@ const ResizableInput = ({ value, onChange }: { value: string; onChange: (val: st
             newValue = "#" + newValue.replace(/^#+/, "");
           }
           onChange(newValue);
+          setShowSuggestions(true);
+        }}
+        onBlur={() => setTimeout(handleCommit, 100)}
+        onFocus={() => setShowSuggestions(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleCommit();
+          }
         }}
         style={{ width: `${inputWidth}px` }}
-        className="text-sm px-2 py-0.5 rounded-full border border-pink-400 bg-pink-100 text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-300"
+        className="text-sm px-2.5 py-1 rounded-full border border-pink-400 bg-pink-100 text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-300"
+        autoComplete="off"
       />
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 min-w-[220px] w-max max-w-[350px] bg-white border border-pink-300 rounded-2xl shadow-lg z-50 max-h-48 overflow-auto flex flex-col"
+          style={{
+            boxShadow: '0 4px 24px 0 rgba(233, 30, 99, 0.10)',
+            top: spanRef.current ? (spanRef.current.getBoundingClientRect().bottom + 8) + 'px' : '120px'
+          }}
+        >
+          {suggestions.map((s, idx) => {
+            const clean = s.replace(/^#+/, "");
+            return (
+              <div
+                key={s + idx}
+                className="px-4 py-2 text-base text-pink-600 hover:bg-pink-100 cursor-pointer transition-colors rounded-xl mx-1 my-1"
+                onMouseDown={() => {
+                  onChange("#" + clean);
+                  setShowSuggestions(false);
+                  if (onCommit) onCommit("#" + clean);
+                }}
+              >
+                #{clean}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -58,9 +127,18 @@ export default function EditDataModal({
 
   if (!userProfile) return <div>Loading...</div>;
 
-  const [birth_date, setBirthdate] = useState(userProfile.birth_date || "");
+  // Normaliza la fecha a yyyy-MM-dd
+  function toDateInputValue(date: string | Date | undefined): string {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  }
+
+  const [birth_date, setBirthdate] = useState(toDateInputValue(userProfile.birth_date));
   const [bio, setBio] = useState(userProfile.biography || "");
-  const [tags, setTags] = useState(userProfile.tags || []);
+  const formatTags = (arr: string[] = []) => arr.map(t => t.startsWith('#') ? t : '#' + t.replace(/^#+/, ''));
+  const [tags, setTags] = useState(formatTags(userProfile.tags));
   const [images, setImages] = useState(userProfile.images || []);
   const [gender, setGender] = useState(userProfile.gender || "");
   const [sexualOrientation, setSexualOrientation] = useState(userProfile.sexual_preferences || "");
@@ -78,12 +156,50 @@ export default function EditDataModal({
   }, [error]);
 
   const handleTagChange = (index: number, newValue: string) => {
-    const newTags = [...tags];
-    newTags[index] = newValue;
-    setTags(newTags);
+    let formatted = newValue.trim();
+    if (!formatted.startsWith("#")) {
+      formatted = "#" + formatted.replace(/^#+/, "");
+    }
+    
+    setTags((prevTags) => {
+      if (index < 0 || index >= prevTags.length) return prevTags;
+      const newTags = [...prevTags];
+      newTags[index] = formatted;
+      return newTags;
+    });
   };
 
-  // Removed unused functions as we now handle images directly with API calls
+  const handleCommitTag = async (index: number, val: string) => {
+    // Normaliza el valor quitando # y a minúsculas para validación y backend
+    const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
+    // Para el estado, siempre debe tener # al inicio
+    const formattedVal = '#' + normalizedVal;
+    const updatedTags = [...tags];
+    updatedTags[index] = formattedVal;
+
+    // Validación: sin duplicados ni vacíos
+    const normalizedTags = updatedTags.map((t) => t.trim().replace(/^#+/, '').toLowerCase());
+    if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
+      setError("Empty or existing tag");
+      return;
+    }
+    try {
+      // Envía al backend sin el #
+      const data = { value: normalizedVal, index: index.toString() };
+      await addTag(data);
+      // Actualiza el estado con el formato correcto
+      setTags(updatedTags);
+      console.log("created tag: ", index, formattedVal);
+    } catch (err: any) {
+      if (err?.response?.status === 409 || err?.message?.includes("already exists")) {
+        setError("Tag already exists");
+      } else {
+        console.error("Error creating tag:", err);
+        onSaveError?.("Error creating tag");
+      }
+    }
+  };
+
 
   const handleGenreChange = (newValue: string) => {
     setGender(newValue);
@@ -95,6 +211,16 @@ export default function EditDataModal({
 
   const handleSave = async () => {
     try {
+      if (!userProfile.main_img) {
+        setError("Please upload a profile picture");
+        return;
+      }
+
+      if (!bio) {
+        setError("Please add a biography");
+        return;
+      }
+
       if (!birth_date) {
         setError("Please select your birth date");
         return;
@@ -110,23 +236,31 @@ export default function EditDataModal({
         return;
       }
 
+
+      if (!tags || tags.length === 0 || tags.every(t => !t || t.trim().length <= 1)) {
+        setError("Please add at least one tag");
+        return;
+      }
+
       const updatedProfile = {
         ...userProfile,
         biography: bio,
         birth_date,
-        tags,
+        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t), // enviar sin # al backend
         images,
         gender,
         sexual_preferences: sexualOrientation,
+        completed_profile: true,
       };
 
       console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
 
-      // Update global context
+      // Update global context y estado local con #
       if (ctx && ctx.setUserProfile) {
-        ctx.setUserProfile(updatedProfile);
+        ctx.setUserProfile({ ...updatedProfile, tags: formatTags(updatedProfile.tags) });
       }
+      setTags(formatTags(updatedProfile.tags));
 
       onSaveSuccess?.();
       onClose();
@@ -140,12 +274,6 @@ export default function EditDataModal({
       <div className="bg-pink-50 rounded-3xl p-6 mx-2 w-full max-w-2xl shadow-xl overflow-y-auto scroll-hidden max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-pink-600">Welcome to Matcha!</h2>
-          <button
-            onClick={onClose}
-            className="text-3xl font-bold text-gray-400 hover:text-pink-600"
-          >
-            &times;
-          </button>
         </div>
 
         <label className="block text-2xl font-semibold text-pink-600 mb-5">
@@ -167,7 +295,7 @@ export default function EditDataModal({
               onChange={async (e) => {
                 if (e.target.files && e.target.files[0]) {
                   try {
-                    const url = await uploadProfilePicture(e.target.files[0]);
+                    await uploadProfilePicture(e.target.files[0]);
                     // Reload profile
                     const { profile } = await fetchUserProfile();
                     if (ctx && ctx.setUserProfile) {
@@ -183,14 +311,14 @@ export default function EditDataModal({
         </div>
 
         <div className="mb-6 text-center">
-					<label className="block text-md font-medium mb-1 text-pink-600">Birthdate</label>
-					<input
-							type="date"
-							value={birth_date}
-							onChange={(e) => setBirthdate(e.target.value)}
-							className="px-4 py-2 border border-pink-400 rounded-md text-pink-600 bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
-					/>
-				</div>
+          <label className="block text-md font-medium mb-1 text-pink-600">Birthdate</label>
+          <input
+              type="date"
+              value={birth_date}
+              onChange={(e) => setBirthdate(e.target.value)}
+              className="px-4 py-2 border border-pink-400 rounded-md text-pink-600 bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
+          />
+        </div>
 
         <div className="mb-6 flex flex-col justify-center items-center gap-2">
           <label className="block text-md font-medium mb-1">Bio</label>
@@ -260,18 +388,22 @@ export default function EditDataModal({
           <label className="block text-md font-medium mb-2">Tags</label>
           <div className="flex flex-wrap gap-2 justify-center">
             {tags.map((tag, i) => (
-              <ResizableInput key={i} value={tag} onChange={(val) => handleTagChange(i, val)} />
+              <ResizableInput key={i} value={tag} 
+              onChange={(val) => handleTagChange(i, val)} 
+              onCommit={(val) => handleCommitTag(i, val)}
+              />
             ))}
 
-            {Array.from({ length: 5 - tags.length }).map((_, i) => (
+            {tags.length < 5 && (
               <button
-                key={`add-${i}`}
-                onClick={() => setTags([...tags, "#"])}
+                onClick={() => {
+                  if (tags.length < 5) setTags([...tags, "#"]);
+                }}
                 className="px-3 py-0.5 rounded-full border border-pink-400 bg-pink-100 text-pink-600 text-sm hover:bg-pink-200 transition"
               >
                 +
               </button>
-            ))}
+            )}
           </div>
         </div>
 
