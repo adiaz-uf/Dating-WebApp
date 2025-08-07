@@ -125,11 +125,14 @@ export default function EditDataModal({
 
   if (!userProfile) return <div>Loading...</div>;
 
-  // Normaliza la fecha a yyyy-MM-dd
+  // Parse date format to yyyy-MM-dd
   function toDateInputValue(date: string | Date | undefined): string {
     if (!date) return "";
     const d = new Date(date);
     if (isNaN(d.getTime())) return "";
+    console.log("date1: ", d);
+    console.log("date_now:", new Date());
+    console.log("date: ", d.toISOString().slice(0, 10));
     return d.toISOString().slice(0, 10);
   }
 
@@ -168,24 +171,21 @@ export default function EditDataModal({
   };
 
   const handleCommitTag = async (index: number, val: string) => {
-    // Normaliza el valor quitando # y a minúsculas para validación y backend
+    // send to backend without '#'
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
-    // Para el estado, siempre debe tener # al inicio
+    // keep local state with '#'
     const formattedVal = '#' + normalizedVal;
     const updatedTags = [...tags];
     updatedTags[index] = formattedVal;
 
-    // Validación: sin duplicados ni vacíos
     const normalizedTags = updatedTags.map((t) => t.trim().replace(/^#+/, '').toLowerCase());
     if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
       setError("Empty or existing tag");
       return;
     }
     try {
-      // Envía al backend sin el #
       const data = { value: normalizedVal, index: index.toString() };
       await addTag(data);
-      // Actualiza el estado con el formato correcto
       setTags(updatedTags);
       console.log("created tag: ", index, formattedVal);
     } catch (err: any) {
@@ -224,6 +224,20 @@ export default function EditDataModal({
         return;
       }
 
+      // Age validation: must be >= 18
+      const today = new Date();
+      const birth = new Date(birth_date);
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        setError("You must be at least 18 years old.");
+        return;
+      }
+
       if (!gender) {
         setError("Please select your gender");
         return;
@@ -233,7 +247,6 @@ export default function EditDataModal({
         setError("Please select your sexual orientation");
         return;
       }
-
 
       if (!tags || tags.length === 0 || tags.every(t => !t || t.trim().length <= 1)) {
         setError("Please add at least one tag");
@@ -254,7 +267,7 @@ export default function EditDataModal({
       console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
 
-      // Update global context y estado local con #
+      // Update global context
       if (ctx && ctx.setUserProfile) {
         ctx.setUserProfile({ ...updatedProfile, tags: formatTags(updatedProfile.tags) });
       }

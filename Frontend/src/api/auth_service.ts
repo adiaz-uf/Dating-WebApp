@@ -41,7 +41,7 @@ export async function loginUser(data: {
     throw new Error(error.message || "Login failed");
   }
 
-  // Después de login, obtener el perfil y guardar el userId en localStorage
+  // get profile & save userId in localStorage
   const result = await response.json();
   try {
     const profileResp = await fetch(`${API_URL}/profile`, { credentials: "include" });

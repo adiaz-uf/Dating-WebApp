@@ -58,10 +58,15 @@ def handle_google_callback(authorization_response, state):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id FROM users WHERE email = %s;", (email,))
+    # Check if email exists and is not an oauth user
+    cur.execute("SELECT id, oauth FROM users WHERE email = %s;", (email,))
     row = cur.fetchone()
     if row:
-        user_id = row[0]
+        user_id, is_oauth = row
+        if not is_oauth:
+            cur.close()
+            conn.close()
+            return False, "This email is already registered. Please log in with your password."
     else:
         cur.execute("""
             INSERT INTO users (email, username, first_name, last_name, oauth, active_account)
@@ -115,10 +120,15 @@ def handle_intra42_callback(authorization_response, state):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id FROM users WHERE email = %s;", (email,))
+    # Check if email exists and is not an oauth user
+    cur.execute("SELECT id, oauth FROM users WHERE email = %s;", (email,))
     row = cur.fetchone()
     if row:
-        user_id = row[0]
+        user_id, is_oauth = row
+        if not is_oauth:
+            cur.close()
+            conn.close()
+            return False, "This email is already registered. Please log in with your password."
     else:
         cur.execute("""
             INSERT INTO users (email, username, first_name, last_name, oauth, active_account)
@@ -126,7 +136,7 @@ def handle_intra42_callback(authorization_response, state):
             RETURNING id;
         """, (email, username, first_name, last_name))
         user_id = cur.fetchone()[0]
-        
+
     conn.commit()
     cur.close()
     conn.close()

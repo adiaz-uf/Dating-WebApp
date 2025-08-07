@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
-import { Button } from "../components/Button";
 import { ProfileProvider } from "../features/profile/ProfileContext";
 import type { UserProfile } from "../features/profile/types";
 import { fetchUserProfile } from "../api/profile_service";
 import EditDataModal from "../features/home/EditDataModal";
 import { useNavigate } from "react-router-dom";
+import { MessageBox } from "../components/MessageBox";
 
 export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false);
@@ -45,6 +45,10 @@ export default function HomePage() {
   return (
     <ProfileProvider profileData={profileData} loggedInUserId={profileData.id}>
       <MainLayout>
+        <div className="absolute top-4 right-4 z-50 space-y-2">
+          {error && <MessageBox type="error" message={error} show={!!error} />}
+          {success && <MessageBox type="success" message="Saved Changes." show={success} />}
+        </div>
         <div className="min-h-screen flex items-center justify-center bg-pink-50">
           <h1 className="text-4xl font-semibold text-pink-600">Welcome to Matcha ❤️</h1>
           {showEdit && (

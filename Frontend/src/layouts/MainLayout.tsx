@@ -9,10 +9,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { userProfile } = useProfileContext();
   const userId = userProfile?.id || "";
   try {
-    // Try to get userId from context if available
-    // This will only work if MainLayout is inside ProfileProvider
-    // Otherwise, fallback to empty string
-    // @ts-ignore
     userId = useProfile().userProfile?.id || "";
   } catch {}
   return (

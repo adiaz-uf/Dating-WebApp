@@ -1,14 +1,11 @@
-// routes/ProfileRouteWrapper.tsx
-
-// import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
 import { ProfileProvider } from "./ProfileContext";
 import ProfilePage from "../../pages/ProfilePage";
 import { fetchUserProfile } from "../../api/profile_service";
 import type { UserProfile } from "./types";
-import { useParams, useNavigate } from "react-router-dom";
 
-// const loggedInUserId = "abc123"; // Simula el usuario actual
 
 export default function ProfileRouteWrapper() {
   const [profileData, setProfileData] = useState<UserProfile | undefined>(undefined);
@@ -20,9 +17,7 @@ export default function ProfileRouteWrapper() {
     setLoading(true);
     fetchUserProfile(userId)
       .then((data) => {
-        // backend puede devolver {success, profile}
         let profile = data.profile || data;
-        // Si profile es un array, mapear a objeto
         if (Array.isArray(profile)) {
           profile = {
             id: profile[0],
@@ -43,7 +38,6 @@ export default function ProfileRouteWrapper() {
 
   if (loading || !profileData) return navigate("/login");
 
-  // El id del usuario autenticado viene en el perfil
   const loggedInUserId = profileData.id;
 
   return (

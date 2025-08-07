@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { useEffect, useState } from 'react';
-import { ProfileProvider } from "./features/profile/ProfileContext";
+import { useEffect } from 'react';
 import './App.css'
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
