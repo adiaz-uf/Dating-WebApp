@@ -6,6 +6,7 @@ import { MessageBox } from "../../components/MessageBox";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
 import { addTag, suggestTags } from "../../api/tag_service";
+import { calculateAge } from "../../lib/CalculateAge";
 
 const ResizableInput = ({
   value,
@@ -225,14 +226,13 @@ export default function EditDataModal({
       }
 
       // Age validation: must be >= 18
-      const today = new Date();
-      const birth = new Date(birth_date);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
+      const age = calculateAge(birth_date);
+      if (!age)
+      {
+        setError("Invalid date.");
+        return;
       }
+  
       if (age < 18) {
         setError("You must be at least 18 years old.");
         return;

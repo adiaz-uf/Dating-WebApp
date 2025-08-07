@@ -8,6 +8,7 @@ from .routes.oauth_routes import oauth_bp
 from .routes.profile_routes import profile_bp
 from .routes.picture_routes import picture_bp
 from .routes.tag_routes import tag_bp
+from .routes.user_routes import users_bp
 
 def create_app():
     load_dotenv()
@@ -33,5 +34,6 @@ def create_app():
     app.register_blueprint(profile_bp, url_prefix="/profile")
     app.register_blueprint(picture_bp, url_prefix="/pictures")
     app.register_blueprint(tag_bp, url_prefix="/tag")
+    app.register_blueprint(users_bp, url_prefix="/users")
 
     return app

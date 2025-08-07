@@ -1,4 +1,6 @@
 export interface UserProfile {
+  longitude: string;
+	latitude: string;
   completed_profile: boolean;
   sexual_preferences: string;
   first_name: string;

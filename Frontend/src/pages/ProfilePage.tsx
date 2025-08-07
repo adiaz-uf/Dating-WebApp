@@ -12,19 +12,8 @@ import { FaRegHeart } from "react-icons/fa6";
 import { BiSolidDislike } from "react-icons/bi";
 import { BiDislike } from "react-icons/bi";
 import { MdOutlineReportProblem } from "react-icons/md";
+import { calculateAge } from "../lib/CalculateAge";
 
-function calculateAge(birthdate: string | Date | undefined | null): number | null {
-  if (!birthdate) return null;
-  const birth = new Date(birthdate);
-  if (isNaN(birth.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age >= 0 && age < 120 ? age : null;
-}
 export default function ProfilePage() {
   const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
   const [showEdit, setShowEdit] = useState(false);
