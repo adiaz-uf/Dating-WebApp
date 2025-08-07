@@ -43,3 +43,12 @@ export async function updateUserProfile(data: {
 
   return response.json();
 }
+
+export async function updateUserLocation(latitude: number, longitude: number) {
+  await fetch(`${API_URL}/profile/location`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ latitude, longitude }),
+  });
+}

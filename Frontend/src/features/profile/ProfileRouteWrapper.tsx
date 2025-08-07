@@ -37,7 +37,8 @@ export default function ProfileRouteWrapper() {
   }, [userId]);
 
   if (loading || !profileData) return navigate("/login");
-
+  if (!profileData.completed_profile) return navigate("/");
+  
   const loggedInUserId = profileData.id;
 
   return (

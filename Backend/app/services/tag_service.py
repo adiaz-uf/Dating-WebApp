@@ -9,7 +9,7 @@ def add_or_update_tag(user_id, tag_name, index):
     cur = conn.cursor()
 
     try:
-        # Elimina el prefijo # si existe
+        # Delete #
         clean_tag_name = tag_name.lstrip('#').strip()
         # Add to tags if not exists
         cur.execute("SELECT id FROM tags WHERE name = %s", (clean_tag_name,))
@@ -57,6 +57,7 @@ def add_or_update_tag(user_id, tag_name, index):
     finally:
         cur.close()
         conn.close()
+        
 # GET
 def suggest_tags(query):
     conn = get_db_connection()

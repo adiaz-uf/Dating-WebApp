@@ -1,16 +1,13 @@
 import { Navbar } from "../components/Navbar";
 import { useState, type ReactNode } from "react";
 import { mockNotifications } from "../pages/NotificationsPage";
-import { useProfile } from "../features/profile/useProfile";
 import { useProfileContext } from "../features/profile/ProfileContext";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const [notifications] = useState(mockNotifications);
   const { userProfile } = useProfileContext();
   const userId = userProfile?.id || "";
-  try {
-    userId = useProfile().userProfile?.id || "";
-  } catch {}
+
   return (
     <>
       <Navbar notifications={notifications} userId={userId} />

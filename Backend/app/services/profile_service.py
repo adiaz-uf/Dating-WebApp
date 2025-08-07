@@ -8,7 +8,7 @@ def get_profile_data(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Datos principales del usuario
+    # Main user Data
     cur.execute("""
         SELECT id, email, username, first_name, last_name, birth_date, biography, fame_rating, gender, sexual_preferences, latitude, longitude, completed_profile, active_account, oauth
         FROM users WHERE id = %s
@@ -19,16 +19,16 @@ def get_profile_data(user_id):
         conn.close()
         return jsonify({"success": False, "message": "User not found"}), 404
 
-    # Obtener imagen principal (main_img)
+    # Profile picture
     cur.execute("SELECT url FROM pictures WHERE user_id = %s AND is_profile_picture = TRUE LIMIT 1", (user_id,))
     main_img_row = cur.fetchone()
     main_img = main_img_row[0] if main_img_row else None
 
-    # Obtener todas las imágenes
+    # other pictures
     cur.execute("SELECT url FROM pictures WHERE user_id = %s", (user_id,))
     images = [row[0] for row in cur.fetchall()]
 
-    # Obtener tags
+    # tags
     cur.execute("""
         SELECT t.name FROM tags t
         JOIN user_tags ut ON ut.tag_id = t.id
@@ -107,3 +107,22 @@ def update_profile_data(user_id, data):
 
     return jsonify({"success": True, "message": "Profile updated"}), 200
 
+def updateUserLocation(user_id, latitude, longitude):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE users
+            SET latitude = %s, longitude = %s
+            WHERE id = %s
+        """, (latitude, longitude, user_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+    return jsonify({"success": True, "message": "Location updated"}), 200

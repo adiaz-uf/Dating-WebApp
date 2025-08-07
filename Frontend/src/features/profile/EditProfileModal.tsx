@@ -7,6 +7,7 @@ import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
 import { addTag, suggestTags } from "../../api/tag_service";
 import { MessageBox } from "../../components/MessageBox";
+import MapSelector from "../../components/MapSelector";
 
 const ResizableInput = ({
   value,
@@ -43,7 +44,6 @@ const ResizableInput = ({
       const tags = await suggestTags(q);
       setSuggestions(tags.filter(t => t !== value).slice(0, 5));
     }, 200);
-    // eslint-disable-next-line
   }, [value]);
 
   const handleCommit = () => {
@@ -139,6 +139,7 @@ export default function EditProfileModal({
   const [sexualOrientation, setSexualOrientation] = useState(userProfile.sexual_preferences || "");
   const [showGenderOptions, setShowGenderOptions] = useState(false);
   const [showOrientationOptions, setShowOrientationOptions] = useState(false);
+  const [showManualLocation, setShowManualLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
 
@@ -165,24 +166,22 @@ export default function EditProfileModal({
   };
 
   const handleCommitTag = async (index: number, val: string) => {
-    // Normaliza el valor quitando # y a minúsculas para validación y backend
+    // delete # in backend
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
-    // Para el estado, siempre debe tener # al inicio
+    // keep # in local state
     const formattedVal = '#' + normalizedVal;
     const updatedTags = [...tags];
     updatedTags[index] = formattedVal;
 
-    // Validación: sin duplicados ni vacíos
+    // check empty or duplicated tags
     const normalizedTags = updatedTags.map((t) => t.trim().replace(/^#+/, '').toLowerCase());
     if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
       setError("Empty or existing tag");
       return;
     }
     try {
-      // Envía al backend sin el #
       const data = { value: normalizedVal, index: index.toString() };
       await addTag(data);
-      // Actualiza el estado con el formato correcto
       setTags(updatedTags);
       console.log("created tag: ", index, formattedVal);
     } catch (err: any) {
@@ -208,7 +207,7 @@ export default function EditProfileModal({
       const updatedProfile = {
         ...userProfile,
         biography: bio,
-        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t), // enviar sin # al backend
+        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t),
         images,
         first_name: name,
         last_name: lastName,
@@ -220,7 +219,7 @@ export default function EditProfileModal({
       console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
 
-      // Update global context y estado local con #
+      // Update global context
       if (ctx && ctx.setUserProfile) {
         ctx.setUserProfile({ ...updatedProfile, tags: formatTags(updatedProfile.tags) });
       }
@@ -302,7 +301,15 @@ export default function EditProfileModal({
             className="w-full md:w-130 min-h-[2.5rem] p-2 rounded-md border border-pink-400 bg-pink-100 text-pink-600 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 resize-y"
           />
         </div>
-        <label className="block text-md font-medium mb-2">Genre and sexual preference</label>
+        
+        {/* Map location selector */}
+        {showManualLocation ? <MapSelector /> :        
+        <Button onClick={() => setShowManualLocation(true)}>
+          Change Location
+        </Button>}
+ 
+
+        <label className="block text-md font-medium mb-3 mt-3">Genre and sexual preference</label>
         <div className="mb-6 flex flex-col md:flex-row justify-center gap-4">
           <div className="relative">
             <Button
@@ -384,7 +391,7 @@ export default function EditProfileModal({
           <label className="block text-md font-medium mb-2">Images</label>
           <div className="flex flex-wrap gap-4 justify-center">
             {images
-              .filter(img => img !== userProfile.main_img) // Filtrar la foto de perfil
+              .filter(img => img !== userProfile.main_img)
               .map((img, index) => (
                 <div key={index} className="relative flex flex-col items-center gap-2">
                   <img
@@ -439,11 +446,8 @@ export default function EditProfileModal({
                     if (e.target.files && e.target.files[0]) {
                       try {
                         const url = await uploadPicture(e.target.files[0]);
-                        // Actualizar el estado con la URL del servidor
                         setImages([...images, url]);
-                        // Limpiar el input
                         e.target.value = "";
-                        // Actualizar contexto si es necesario
                         if (ctx && ctx.setUserProfile && userProfile) {
                           ctx.setUserProfile({
                             ...userProfile,

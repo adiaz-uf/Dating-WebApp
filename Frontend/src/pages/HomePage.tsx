@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { ProfileProvider } from "../features/profile/ProfileContext";
 import type { UserProfile } from "../features/profile/types";
-import { fetchUserProfile } from "../api/profile_service";
+import { fetchUserProfile, updateUserLocation } from "../api/profile_service";
 import EditDataModal from "../features/home/EditDataModal";
 import { useNavigate } from "react-router-dom";
 import { MessageBox } from "../components/MessageBox";
+import { getApproxLocationByIP } from "../lib/LocationByIp";
 
 export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false);
@@ -37,6 +38,19 @@ export default function HomePage() {
       setShowEdit(true);
     }
   }, [profileData]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        updateUserLocation(latitude, longitude);
+      },
+      (error) => {
+        console.warn("User denied location or error occurred", error);
+        getApproxLocationByIP(); // fallback by IP
+      }
+    );
+  }, []);
 
   if (loading) return <div>Loading profile...</div>;
   if (!profileData) return <div>Error loading profile. Please try again later.</div>;
