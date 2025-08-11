@@ -14,8 +14,10 @@ CREATE TABLE users (
 	sexual_preferences VARCHAR(30),
 	latitude DOUBLE PRECISION,
 	longitude DOUBLE PRECISION,
+    city VARCHAR(255) DEFAULT NULL,
 	location_last_updated TIMESTAMP,
 	completed_profile BOOLEAN DEFAULT FALSE,
+    last_active TIMESTAMP,
 	active_account BOOLEAN DEFAULT FALSE,
 	oauth BOOLEAN DEFAULT FALSE,
 	confirm_token VARCHAR(2048) DEFAULT NULL,
@@ -55,6 +57,32 @@ CREATE TABLE likes (
     liker_id UUID REFERENCES users(id) ON DELETE CASCADE,
     liked_id UUID REFERENCES users(id) ON DELETE CASCADE,
     liked_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE dislikes (
+    id SERIAL PRIMARY KEY,
+    disliker_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    disliked_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    liked_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE chats (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE chat_members (
+    chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (chat_id, user_id)
+);
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_location ON users(latitude, longitude);

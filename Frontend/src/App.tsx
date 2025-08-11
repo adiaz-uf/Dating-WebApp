@@ -10,13 +10,14 @@ import NewPassPage from "./pages/NewPassPage";
 import ProfileRouteWrapper from "./features/profile/ProfileRouteWrapper";
 import NotificationsPage from "./pages/NotificationsPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import ActivityUpdater from "./lib/ActivityUpdater";
 
 function Logout() {
     const navigate = useNavigate();
 
     useEffect(() => {
         const handleLogout = async () => {
-            localStorage.clear(); // Clear localStorage after the API call
+            localStorage.clear(); // Clear localStorage
             navigate('/login'); // Redirect to login after logout
         };
 
@@ -28,8 +29,12 @@ function Logout() {
 
 
 function App() {
+
+  const isLoggedIn = !!localStorage.getItem("userId");
+
   return (
     <BrowserRouter>
+      {isLoggedIn && <ActivityUpdater />}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />

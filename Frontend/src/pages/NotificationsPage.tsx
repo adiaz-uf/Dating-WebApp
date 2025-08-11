@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegEye, FaUser, FaEye } from "react-icons/fa";
 import { BiDislike } from "react-icons/bi";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import MainLayout from "../layouts/MainLayout";
+import { ProfileProvider } from "../features/profile/ProfileContext";
+import { fetchUserProfile } from "../api/profile_service";
 import Avatar from "../components/Avatar";
 import { Button } from "../components/Button";
 import { Card, CardContent } from "../components/Card";
+import type { UserProfile } from "../features/profile/types";
 
 interface Notification {
   id: string;
@@ -111,7 +114,35 @@ export const mockNotifications: Notification[] = [
   },
 ];
 
-export default function NotificationsPage() {
+
+export default function NotificationsPageWithProfileProvider() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const userId = localStorage.getItem("userId");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await fetchUserProfile();
+        setProfile(data.profile || data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, [userId]);
+
+  if (loading) return <div>Loading...</div>;
+  if (!profile) return <div>Error loading profile.</div>;
+
+  return (
+    <ProfileProvider profileData={profile} loggedInUserId={profile.id}>
+      <NotificationsPageInner />
+    </ProfileProvider>
+  );
+}
+
+function NotificationsPageInner() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const navigate = useNavigate();
 

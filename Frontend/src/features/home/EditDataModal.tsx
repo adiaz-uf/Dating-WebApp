@@ -131,9 +131,6 @@ export default function EditDataModal({
     if (!date) return "";
     const d = new Date(date);
     if (isNaN(d.getTime())) return "";
-    console.log("date1: ", d);
-    console.log("date_now:", new Date());
-    console.log("date: ", d.toISOString().slice(0, 10));
     return d.toISOString().slice(0, 10);
   }
 
@@ -210,6 +207,7 @@ export default function EditDataModal({
 
   const handleSave = async () => {
     try {
+      /* TODO: form checks 
       if (!userProfile.main_img) {
         setError("Please upload a profile picture");
         return;
@@ -221,6 +219,7 @@ export default function EditDataModal({
       }
 
       if (!birth_date) {
+      || useState(toDateInputValue(new Date())
         setError("Please select your birth date");
         return;
       }
@@ -251,13 +250,19 @@ export default function EditDataModal({
       if (!tags || tags.length === 0 || tags.every(t => !t || t.trim().length <= 1)) {
         setError("Please add at least one tag");
         return;
+      } */
+
+        if (!birth_date) {
+        setBirthdate(toDateInputValue(new Date()));
+        /* setError("Please select your birth date");
+        return; */
       }
 
       const updatedProfile = {
         ...userProfile,
         biography: bio,
         birth_date,
-        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t), // enviar sin # al backend
+        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t), // send without # to backend
         images,
         gender,
         sexual_preferences: sexualOrientation,
@@ -352,7 +357,7 @@ export default function EditDataModal({
             </Button>
             {showGenderOptions && (
               <div className="absolute mt-2 w-full bg-white border border-gray-300 rounded-md shadow-md z-10">
-                {["Male", "Female", "Other"].map((option) => (
+                {["Male", "Female", "Non_binary"].map((option) => (
                   <div
                     key={option}
                     className="px-2 py-2 hover:bg-purple-100 cursor-pointer"

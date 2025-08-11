@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useProfile } from "../features/profile/useProfile";
+import { setLikedProfile, setNotLikedProfile, setDislikedProfile, setNotDislikedProfile } from "../api/user_service";
 import MainLayout from "../layouts/MainLayout";
 import EditProfileModal from "../features/profile/EditProfileModal";
 import { ProfileInfoCard } from "../features/profile/ProfileInfoCard";
@@ -13,14 +14,16 @@ import { BiSolidDislike } from "react-icons/bi";
 import { BiDislike } from "react-icons/bi";
 import { MdOutlineReportProblem } from "react-icons/md";
 import { calculateAge } from "../lib/CalculateAge";
+import { isOnline } from "../lib/ActivityUpdater";
 
 export default function ProfilePage() {
-  const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
+  const { userProfile, isOwnProfile, likeProfile, dislikeProfile, updateProfile } = useProfile();
   const [showEdit, setShowEdit] = useState(false);
   const [showInteractions, setShowInteractions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [showMatch, setShowMatch] = useState(false);
 
   if (!userProfile) return <div>No profile data.</div>;
 
@@ -28,21 +31,22 @@ export default function ProfilePage() {
   const name = userProfile.first_name || "";
   const lastName = userProfile.last_name || "";
   const bio = userProfile.biography || "";
-  // Try to get birthdate from multiple possible fields
   const birthdate = userProfile.birth_date || null;
   const age = calculateAge(birthdate);
+  const online = isOnline(userProfile.last_active, 30);
 
   return (
     <MainLayout>
       <div className="absolute top-4 right-4 z-50 space-y-2">
         {error && <MessageBox type="error" message={error} show={!!error} />}
         {success && <MessageBox type="success" message="Saved Changes." show={success} />}
+        {showMatch && <MessageBox type="match" message="¡Its a match! Now you can chat with your new match!!" show={showMatch} />}
       </div>
       <div className="absolute top-20 left-4 md:right-8 space-y-2 flex gap-3">
         <div className="relative group">
           <span className="relative flex gap-2 !p-2 !px-3 group bg-pink-600 rounded-xl text-white items-center justify-center font-medium">
             <FaMedal/>
-            <label>100</label>
+            <label>{userProfile.fame_rating}</label>
           </span>
           <span className="absolute -right-24 top-5 -translate-y-1/2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
             Fame Rating
@@ -91,7 +95,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="absolute top-20 right-4 md:right-8 space-y-2 flex gap-3 flex-col items-right justify-right">
-            <Button variant="none" className="cursor-pointer text-2xl text-pink-600 ml-auto" onClick={() => setShowReport(!showReport)}>
+            <Button variant="none" className="cursor-pointer hover:scale-125 text-2xl text-pink-600 ml-auto" onClick={() => setShowReport(!showReport)}>
               <MdOutlineReportProblem />
             </Button>
             {showReport && (
@@ -117,7 +121,14 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={() => likeProfile(false)}
+                onClick={async () => {
+                  try {
+                    await setNotLikedProfile({ liked_id: userProfile.id });
+                    updateProfile({ liked: false });
+                  } catch (err) {
+                    setError("Error removing like");
+                  }
+                }}
               >
                 <FaHeart />
               </Button>
@@ -130,7 +141,18 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={() => likeProfile(true)}
+                onClick={async () => {
+                  try {
+                    const res = await setLikedProfile({ liked_id: userProfile.id });
+                    updateProfile({ liked: true, disliked: false });
+                    if (res && res.match) {
+                      setShowMatch(true);
+                      setTimeout(() => setShowMatch(false), 4000);
+                    }
+                  } catch (err) {
+                    setError("Error liking profile");
+                  }
+                }}
               >
                 <FaRegHeart />
               </Button>
@@ -139,15 +161,22 @@ export default function ProfilePage() {
               </span>
             </div>
           )}
-          <label className={`mt-1 px-2 rounded-xl border ${userProfile.isOnline ? "bg-green-100 text-green-600 border-green-600" : "bg-red-100 text-red-600 border-red-600"}`}>
-            {userProfile.isOnline ? "online" : "offline"}
+          <label className={`mt-1 px-2 rounded-xl border ${online ? "bg-green-100 text-green-600 border-green-600" : "bg-red-100 text-red-600 border-red-600"}`}>
+            {online ? "online" : "offline"}
           </label>
           {userProfile.disliked ? (
             <div className="relative group">
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={() => dislikeProfile(false)}
+                onClick={async () => {
+                  try {
+                    await setNotDislikedProfile({ disliked_id: userProfile.id });
+                    updateProfile({ disliked: false });
+                  } catch (err) {
+                    setError("Error removing dislike");
+                  }
+                }}
               >
                 <BiSolidDislike/>
               </Button>
@@ -160,7 +189,14 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={() => dislikeProfile(true)}
+                onClick={async () => {
+                  try {
+                    await setDislikedProfile({ disliked_id: userProfile.id });
+                    updateProfile({ disliked: true, liked: false });
+                  } catch (err) {
+                    setError("Error disliking profile");
+                  }
+                }}
               >
                 <BiDislike/>
               </Button>

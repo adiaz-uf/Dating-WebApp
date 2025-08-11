@@ -42,6 +42,7 @@ services:
         - matcha-network
     environment:
         TZ: ${TIMEZONE}
+        FLASK_ENV: development
     depends_on:
         postgresql:
             condition: service_healthy

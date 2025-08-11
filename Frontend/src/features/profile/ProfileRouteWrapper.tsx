@@ -32,14 +32,14 @@ export default function ProfileRouteWrapper() {
         }
         setProfileData(profile);
       })
-      .catch((err) => console.error(err))
+      .catch((err) => navigate("/login"))
       .finally(() => setLoading(false));
   }, [userId]);
 
-  if (loading || !profileData) return navigate("/login");
+  if (loading || !profileData) return <div>Loading...</div>
   if (!profileData.completed_profile) return navigate("/");
   
-  const loggedInUserId = profileData.id;
+  const loggedInUserId = localStorage.getItem("userId") ?? "";
 
   return (
     <ProfileProvider profileData={profileData} loggedInUserId={loggedInUserId}>

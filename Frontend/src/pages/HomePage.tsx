@@ -4,14 +4,14 @@ import { ProfileProvider } from "../features/profile/ProfileContext";
 import type { UserProfile } from "../features/profile/types";
 import { fetchUserProfile, updateUserLocation } from "../api/profile_service";
 import EditDataModal from "../features/home/EditDataModal";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MessageBox } from "../components/MessageBox";
 import { getApproxLocationByIP } from "../lib/LocationByIp";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
-import { Slider } from "../components/home/Slider";
-import { Select } from "../components/home/Select";
-import { UserCard } from "../components/home/UserCard";
+import { Slider } from "../features/home/Slider";
+import { Select } from "../features/home/Select";
+import { UserCard } from "../features/home/UserCard";
 import { fetchSuggestedUsers } from "../api/user_service";
 
 export default function HomePage() {
@@ -36,6 +36,27 @@ export default function HomePage() {
   });
 
   const navigate = useNavigate();
+  const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
+  const location = useLocation();
+
+    // Detect OAuth login redirect and store userId in localStorage if present
+  useEffect(() => {
+    // Handle confirmMsg from navigation state
+    if (location.state && location.state.confirmMsg) {
+      setConfirmMsg(location.state.confirmMsg);
+      window.history.replaceState({}, document.title);
+    }
+
+    // Check for userId in query params
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("userId");
+    if (userId) {
+      localStorage.setItem("userId", userId);
+      params.delete("userId");
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location.state]);
 
   // fetch profile data
   useEffect(() => {
@@ -86,7 +107,7 @@ export default function HomePage() {
     }
   }, [profileData]);
 
-  /* open data modal */
+  /* TODO: open data modal */
   useEffect(() => {
     if (profileData && profileData.completed_profile === false) {
       setShowEdit(true);
@@ -227,10 +248,7 @@ export default function HomePage() {
 
         </div>
           {/* Suggested or Searched Profiles */}
-          <div className='w-full gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-            {suggestedUsers.map((user) => (
-              <UserCard key={user.id} user={user} />
-            ))}
+          <div className='w-full gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-4'>
             {suggestedUsers.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}

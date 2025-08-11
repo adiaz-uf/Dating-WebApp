@@ -7,4 +7,4 @@ pip install -r requirements.txt
 echo "Launch Flask server..."
 cd /backend 
 export FLASK_APP=run:create_app
-flask run --host=0.0.0.0 --port=3001 #TODO
+python seed_users.py && flask run --host=0.0.0.0 --port=3001 #TODO

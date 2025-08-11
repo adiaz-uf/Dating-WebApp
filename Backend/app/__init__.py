@@ -20,6 +20,7 @@ def create_app():
         return send_from_directory('/uploads', filename)
 
     app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
+    # Enable CORS for all routes, allowing credentials (cookies, etc.)
     CORS(app, supports_credentials=True)
 
     # Configure upload folder for pictures
@@ -34,6 +35,6 @@ def create_app():
     app.register_blueprint(profile_bp, url_prefix="/profile")
     app.register_blueprint(picture_bp, url_prefix="/pictures")
     app.register_blueprint(tag_bp, url_prefix="/tag")
-    app.register_blueprint(users_bp, url_prefix="/users")
+    app.register_blueprint(users_bp, url_prefix="/users", strict_slashes=False)
 
     return app

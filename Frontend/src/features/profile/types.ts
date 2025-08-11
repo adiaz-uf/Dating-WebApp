@@ -1,4 +1,7 @@
 export interface UserProfile {
+  last_active: any;
+  city: string;
+  fame_rating: ReactNode;
   longitude: string;
 	latitude: string;
   completed_profile: boolean;
@@ -16,7 +19,7 @@ export interface UserProfile {
   tags: string[];
   images: string[];
   isOnline: boolean;
-  main_img: string; // TODO: delete when bbdd -> test
-  liked: boolean; //test
-  disliked: boolean; //test
+  main_img: string;
+  liked: boolean;
+  disliked: boolean;
 }

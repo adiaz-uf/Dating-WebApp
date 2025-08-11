@@ -1,5 +1,5 @@
 from flask import Blueprint, session, jsonify, request # type: ignore
-from app.services.profile_service import get_profile_data, update_profile_data, updateUserLocation
+from app.services.profile_service import get_profile_data, update_last_active, update_profile_data, updateUserLocation
 from app.Utils.check_uuid import is_valid_uuid
 
 profile_bp = Blueprint("profile", __name__)
@@ -43,3 +43,15 @@ def updateLocation():
         return jsonify({"success": False, "message": "Latitude and longitude are required"}), 400
     
     return updateUserLocation(session_user_id, latitude, longitude)
+
+
+# POST /profile/ping
+@profile_bp.route("/ping", methods=["POST", "OPTIONS"])
+def update_activity():
+    if request.method == "OPTIONS":
+        return '', 200
+    session_user_id = session.get("user_id")
+    if not session_user_id:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+    
+    return update_last_active(session_user_id)

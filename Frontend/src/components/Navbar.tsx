@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { BiLogOut } from "react-icons/bi";
 import {IconContext} from "react-icons";
 import { FaBell } from "react-icons/fa";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./Button";
 
 
@@ -12,24 +12,25 @@ type NavbarProps = {
   userId: string;
 };
 
+type Notification = {
+  id: string;
+  message: string;
+  read: boolean;
+};
+
 export const Navbar = ({ notifications, userId }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate(); 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const navLinks = [
-    { label: "Home", href: "/" },
-    { label: "Browse", href: "/browse" },
+    { label: "Browse", href: "/" },
     { label: "Chats", href: "/chats" },
     { label: "Profile", href: "/profile" },
     { label: "Logout", href: "/logout" },
   ];
 
-  type Notification = {
-    id: string;
-    message: string;
-    read: boolean;
-  };
+
 
   return (
     <header className="bg-pink-50 shadow-md fixed top-0 left-0 w-full z-50 py-1 overflow-hidden">
