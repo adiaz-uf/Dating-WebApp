@@ -1,15 +1,19 @@
+
 import React from "react";
 import Avatar from "../../components/Avatar";
+import { isOnline } from "../../lib/ActivityUpdater";
 
-interface Chat {
+export interface Chat {
   id: string;
   name: string;
   avatar: string;
   lastMessage: string;
   lastMessageTime: string;
   unread: number;
-  online: boolean;
+  online?: boolean;
+  last_active?: string;
 }
+
 
 interface ChatListProps {
   chats: Chat[];
@@ -38,8 +42,8 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
               >     
                 <div className="relative w-10 h-10">
                   <Avatar src={chat.avatar} />
-                  {chat.online ?
-                    <span className="absolute bottom-0.5 right-0.5 bg-green-500 w-2 h-2 rounded-full border-shadow"/> : ""
+                  {chat.last_active && isOnline(chat.last_active, 10) ?
+                    <span className="absolute bottom-0.5 right-0.5 bg-green-400 w-2 h-2 rounded-full border-shadow"/> : ""
                   }
                 </div>
                 <div className="flex-1 min-w-0">

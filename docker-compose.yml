@@ -32,8 +32,8 @@ services:
   backend:
     container_name: backend
     build:
-        context: ./Docker/Backend
-        dockerfile: Dockerfile
+        context: .
+        dockerfile: Docker/Backend/Dockerfile
     volumes:
         - ./Backend:/backend
         - ./uploads:/uploads

@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {Button} from "../../components/Button";
-import {Input} from "../../components/Input";
+import { Button } from "../../components/Button";
+import { Input } from "../../components/Input";
 import Avatar from "../../components/Avatar";
+import { fetchChatMessages } from "../../api/chat_service";
+import { socket } from "../../api/sockets";
+import { isOnline } from "../../lib/ActivityUpdater";
 
 interface Message {
   id: string;
@@ -15,8 +18,10 @@ interface ChatProps {
   id: string;
   name: string;
   avatar: string;
-  online: boolean;
+  online?: boolean;
+  last_active?: string;
   messages: Message[];
+  other_user_id?: string;
 }
 
 interface ChatConversationProps {
@@ -25,51 +30,76 @@ interface ChatConversationProps {
 }
 
 export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack }) => {
+
   const navigate = useNavigate();
   const [newMessage, setNewMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>(chat.messages);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+
+  // fetch old messages
+  useEffect(() => {
+    setLoading(true);
+    fetchChatMessages(chat.id)
+      .then((data) => {
+        const userId = localStorage.getItem("userId");
+        const msgs = (data.messages || []).map((msg: any) => ({
+          id: msg.id,
+          text: msg.content,
+          sent: userId && msg.sender_id == userId,
+          time: msg.sent_at ? new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""
+        }));
+        setMessages(msgs);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+
+    // join room
+    if (!socket.connected) socket.connect();
+    socket.emit("join", { chat_id: chat.id, username: chat.name });
+
+    // recieve message
+    socket.on("receive_message", (data: any) => {
+      if (data.chat_id === chat.id) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: data.msg_id || Date.now().toString(),
+            text: data.content,
+            sent: data.user_id == localStorage.getItem("userId"),
+            time: data.sent_at ? new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""
+          }
+        ]);
+      }
+    });
+
+    // Leave room
+    return () => {
+      socket.emit("leave", { chat_id: chat.id, username: chat.name });
+      socket.off("receive_message");
+    };
+  }, [chat.id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
-    
-    const newMsg: Message = {
-      id: `new-${Date.now()}`,
-      text: newMessage,
-      sent: true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages([...messages, newMsg]);
+    const userId = localStorage.getItem("userId");
+    // send message
+    socket.emit("send_message", {
+      chat_id: chat.id,
+      user_id: userId,
+      content: newMessage
+    });
     setNewMessage("");
-    
-    // Simulate reply after a delay
-    setTimeout(() => {
-      const replies = [
-        "That sounds great!",
-        "I'd love to hear more about that.",
-        "Interesting! Tell me more.",
-        "I'm not sure I understand. Can you explain?",
-        "Let's meet up soon!",
-        "I was thinking the same thing!",
-        "Haha, that's funny 😂",
-        "I'll get back to you on that."
-      ];
-      
-      const replyMsg: Message = {
-        id: `reply-${Date.now()}`,
-        text: replies[Math.floor(Math.random() * replies.length)],
-        sent: false,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      setMessages(prev => [...prev, replyMsg]);
-    }, 1000 + Math.random() * 2000);
   };
 
   const handleUpload = () => {}
@@ -80,6 +110,9 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       handleSendMessage();
     }
   };
+
+  // Calcular online usando last_active si está disponible
+  const online = chat.last_active ? isOnline(chat.last_active, 10) : false;
 
   return (
     <div className="flex flex-col h-full">
@@ -92,17 +125,17 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
         )}
         <div className="relative w-10 h-10">
           <Avatar src={chat.avatar} />
-          {chat.online ?
+          {online ?
             <span className="absolute bottom-0.5 right-0.5 bg-green-500 w-2 h-2 rounded-full"/> : ""
           }
         </div>
         <div className="flex-1">
           <h2 className="font-medium">{chat.name}</h2>
           <p className="text-tiny text-default-500">
-            {chat.online ? "Online" : "Offline"}
+            {online ? "Online" : "Offline"}
           </p>
         </div>
-        <Button onClick={() => navigate(`/profile/${chat.id}`)}>
+        <Button onClick={() => navigate(`/profile/${chat.other_user_id || chat.id}`)}>
           View Profile
         </Button>
       </div>

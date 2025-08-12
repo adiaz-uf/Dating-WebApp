@@ -28,8 +28,8 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode()
 
 def random_coords():
-    lat = round(random.uniform(36.0, 55.0), 6)
-    lon = round(random.uniform(-10.0, 20.0), 6)
+    lat = round(random.uniform(36.0, 43.8), 6)
+    lon = round(random.uniform(-9.5, 3.3), 6)
     return lat, lon
 
 def reverse_geocode(lat, lon):
@@ -41,7 +41,6 @@ def reverse_geocode(lat, lon):
         data = response.json()
         address = data.get("address", {})
 
-        # Orden de prioridad más amplio
         city = (
             address.get("city") or
             address.get("town") or

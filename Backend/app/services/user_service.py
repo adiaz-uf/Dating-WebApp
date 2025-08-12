@@ -186,6 +186,20 @@ def set_user_disliked(disliker_user, disliked_user):
             INSERT INTO dislikes (disliker_id, disliked_id)
             VALUES (%s, %s)
         """, (disliker_user, disliked_user,))
+
+        # Delete chat between users if exists
+        cur.execute("""
+            SELECT c.id FROM chats c
+            JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = %s
+            JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = %s
+        """, (disliker_user, disliked_user))
+        chat = cur.fetchone()
+        if chat:
+            chat_id = chat[0]
+            cur.execute("DELETE FROM messages WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chat_members WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chats WHERE id = %s", (chat_id,))
+
         # Fame rating logic
         if like_existed:
             # -2 for removing like, -2 for dislike
@@ -198,7 +212,7 @@ def set_user_disliked(disliker_user, disliked_user):
                 UPDATE users SET fame_rating = GREATEST(fame_rating - 2, 0) WHERE id = %s
             """, (disliked_user,))
         conn.commit()
-        return jsonify({"success": True, "message": "Dislike added, like removed if existed, and fame_rating decreased accordingly"}), 201
+        return jsonify({"success": True, "message": "Dislike added, like removed if existed, chat deleted if existed, and fame_rating decreased accordingly"}), 201
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
     finally:

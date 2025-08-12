@@ -15,7 +15,6 @@ volumes:
 	@mkdir -p $(DATA_PATH)
 	@mkdir -p $(POSTGRESQL_VOLUME_PATH)
 	@mkdir -p $(UPLOADS_PATH)
-	@mkdir -p $(DOWNLOADS_PATH)
 
 build: volumes
 	@echo "$(GREEN) --- BUILDING CONTAINERS  --- $(COLOR_OFF)"
@@ -37,7 +36,6 @@ remove_data:
 	@echo "$(GREEN) --- REMOVING DATA  --- $(COLOR_OFF)"
 	@rm -rf $(DATA_PATH)
 	@rm -rf $(UPLOADS_PATH)
-	@rm -rf $(DOWNLOADS_PATH)
 
 fclean: down remove_data
 	@echo "$(GREEN) --- REMOVING ALL IMAGES  --- $(COLOR_OFF)"

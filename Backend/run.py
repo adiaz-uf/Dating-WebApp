@@ -1,7 +1,12 @@
-# run.py
-from app import create_app
+from app import create_app, socketio
+from app.sockets import chat_socket
+import eventlet
+import eventlet.wsgi
 
 app = create_app()
 
+# Register sockets
+chat_socket.register_chat_socket(socketio)
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3001, debug=True, use_reloader=True) # TODO: DEVELOPMENT: debug=True 
+    socketio.run(app, host='0.0.0.0', port=3001, debug=True)
