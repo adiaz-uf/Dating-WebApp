@@ -66,6 +66,13 @@ CREATE TABLE dislikes (
     liked_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE blocks (
+    id SERIAL PRIMARY KEY,
+    blocker_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    blocked_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE chats (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     created_at TIMESTAMP DEFAULT NOW()

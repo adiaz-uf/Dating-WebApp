@@ -207,7 +207,7 @@ export default function ProfilePage() {
           )}
           </div>
         )}
-        <div className="flex flex-wrap gap-3 items-center my-6">
+        <div className="flex flex-wrap gap-3 items-center justify-center my-6">
           <h1 className="text-3xl font-semibold leading-none">{name || "No name"} {lastName}</h1>
           <span className="text-3xl font-semibold translate-y-[1px]"> - </span>
           <h2 className="text-2xl font-semibold translate-y-[2px]">{age !== null ? age : ""}</h2>

@@ -1,5 +1,5 @@
 from flask import Blueprint, session, jsonify, request # type: ignore
-from app.services.profile_service import get_profile_data, update_last_active, update_profile_data, updateUserLocation
+from app.services.profile_service import get_profile_data, get_user_recieved_likes, get_user_recieved_views, update_last_active, update_profile_data, updateUserLocation
 from app.Utils.check_uuid import is_valid_uuid
 
 profile_bp = Blueprint("profile", __name__)
@@ -55,3 +55,24 @@ def update_activity():
         return jsonify({"success": False, "message": "Not authenticated"}), 401
     
     return update_last_active(session_user_id)
+
+
+# GET /profile/likes
+@profile_bp.route("/likes", methods=["GET"])
+def get_recieved_likes():
+   
+    session_user_id = session.get("user_id")
+    if not session_user_id:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+    
+    return get_user_recieved_likes(session_user_id)
+
+# GET /profile/views
+@profile_bp.route("/views", methods=["GET"])
+def get_recieved_views():
+   
+    session_user_id = session.get("user_id")
+    if not session_user_id:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+    
+    return get_user_recieved_views(session_user_id)

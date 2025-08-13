@@ -70,3 +70,32 @@ export async function pingActivity() {
     return response.json();
 }
 
+export async function fetchUserRecievedLikes() {
+  const url =`${API_URL}/profile/likes`;
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Fetching profile likes failed");
+  }
+
+  return response.json();
+}
+
+export async function fetchUserRecievedViews() {
+  const url =`${API_URL}/profile/views`;
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Fetching profile views failed");
+  }
+
+  return response.json();
+}

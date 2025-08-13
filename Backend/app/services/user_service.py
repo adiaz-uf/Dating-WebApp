@@ -47,8 +47,6 @@ def get_suggested_users_data(user_id):
         else:
             genders_to_show = ['male', 'female', 'non-binary']
 
-        print(f"[DEBUG] genders_to_show={genders_to_show}")
-
         # Suggestions Query
         
         # 1. Prioritys: same city, then distance, tags and fame
@@ -157,11 +155,7 @@ def get_suggested_users_data(user_id):
         rows = cur.fetchall()
         columns = [desc[0] for desc in cur.description]
         users = [dict(zip(columns, row)) for row in rows]
-        print(f"[DEBUG] Usuarios sugeridos encontrados: {len(users)}")
-        for u in users:
-            print(f"[DEBUG] Sugerido: id={u.get('id', 'N/A')} username={u.get('username', 'N/A')} gender={u.get('gender', 'N/A')} city={u.get('city', 'N/A')}")
     except Exception as e:
-        print(f"[ERROR] {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cur.close()

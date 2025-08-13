@@ -194,3 +194,69 @@ def update_last_active(user_id):
         cur.close()
         conn.close()
     return jsonify({"success": True, "message": "Activity state updated"}), 200
+
+
+# GET users who liked the given user
+def get_user_recieved_likes(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT 
+                u.id,
+                u.username,
+                u.first_name,
+                u.last_name,
+                (
+                    SELECT url 
+                    FROM pictures 
+                    WHERE user_id = u.id AND is_profile_picture = TRUE 
+                    ORDER BY uploaded_at DESC 
+                    LIMIT 1
+                ) AS main_img
+            FROM users u
+            JOIN likes l ON l.liker_id = u.id
+            WHERE l.liked_id = %s
+        """, (user_id,))
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        users = [dict(zip(columns, row)) for row in rows]
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+    return jsonify({"success": True, "users": users}), 200
+    
+    
+# GET users who viewed the given user
+def get_user_recieved_views(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT 
+                u.id,
+                u.username,
+                u.first_name,
+                u.last_name,
+                (
+                    SELECT url 
+                    FROM pictures 
+                    WHERE user_id = u.id AND is_profile_picture = TRUE 
+                    ORDER BY uploaded_at DESC 
+                    LIMIT 1
+                ) AS main_img
+            FROM users u
+            JOIN profile_views l ON l.viewer_id = u.id
+            WHERE l.viewed_id = %s
+        """, (user_id,))
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        users = [dict(zip(columns, row)) for row in rows]
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+    return jsonify({"success": True, "users": users}), 200
