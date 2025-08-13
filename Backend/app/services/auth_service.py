@@ -98,7 +98,6 @@ def reset_password(email):
     
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     row = cur.fetchone()
-    print(email)
     if not row:
         cur.close()
         conn.close()

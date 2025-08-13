@@ -3,56 +3,171 @@ from .db import get_db_connection
 
 users_bp = Blueprint("users", __name__)
 
-# GET /users
+# GET suggested users based on location, tags, sexuality, etc
 def get_suggested_users_data(user_id):
+    """
+    Return suggested users based on location, sexual orientation, 
+    shared tags and fame rating.
+    """
     conn = get_db_connection()
     cur = conn.cursor()
-
+    result = None
+    code = None
     try:
+        # Get actual user's data
         cur.execute("""
-            SELECT 
-                u.id,
-                u.username,
-                u.city,
-                u.first_name,
-                u.birth_date,
-                u.latitude,
-                u.longitude,
-                u.biography,
-                u.fame_rating,
-                (
-                    SELECT url 
-                    FROM pictures 
-                    WHERE user_id = u.id AND is_profile_picture = TRUE 
-                    ORDER BY uploaded_at DESC 
-                    LIMIT 1
-                ) AS main_img,
-                ARRAY(
-                    SELECT t.name
-                    FROM user_tags ut
-                    JOIN tags t ON ut.tag_id = t.id
-                    WHERE ut.user_id = u.id
-                    ORDER BY ut.index
-                ) AS tags
-            FROM users u
-            WHERE u.active_account = TRUE 
-              AND u.completed_profile = TRUE
-              AND u.id != %s
+            SELECT gender, sexual_preferences, city, latitude, longitude
+            FROM users WHERE id = %s
         """, (user_id,))
+        user = cur.fetchone()
+        if not user:
+            result = jsonify({"success": False, "message": "User not found"})
+            code = 404
+            return result, code
+        gender, sexual_pref, user_city, user_lat, user_lon = user
+
+        # Determinate genders to show based on sexual orietation
+        genders_to_show = []
+        if not sexual_pref or sexual_pref.lower() == 'bisexual':
+            genders_to_show = ['male', 'female', 'non-binary']
+        elif sexual_pref.lower() == 'heterosexual':
+            if gender and gender.lower() == 'male':
+                genders_to_show = ['female']
+            elif gender and gender.lower() == 'female':
+                genders_to_show = ['male']
+            else:
+                genders_to_show = ['male', 'female', 'non-binary']
+        elif sexual_pref.lower() == 'homosexual':
+            if gender and gender.lower() == 'male':
+                genders_to_show = ['male']
+            elif gender and gender.lower() == 'female':
+                genders_to_show = ['female']
+            else:
+                genders_to_show = ['male', 'female', 'non-binary']
+        else:
+            genders_to_show = ['male', 'female', 'non-binary']
+
+        print(f"[DEBUG] genders_to_show={genders_to_show}")
+
+        # Suggestions Query
+        
+        # 1. Prioritys: same city, then distance, tags and fame
+        # 2. Only active users and completed profile
+        # 3. Only compatible genders
+        if user_lat is None or user_lon is None:
+            cur.execute(f"""
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.city,
+                    u.first_name,
+                    u.birth_date,
+                    u.latitude,
+                    u.longitude,
+                    u.biography,
+                    u.fame_rating,
+                    (
+                        SELECT url 
+                        FROM pictures 
+                        WHERE user_id = u.id AND is_profile_picture = TRUE 
+                        ORDER BY uploaded_at DESC 
+                        LIMIT 1
+                    ) AS main_img,
+                    ARRAY(
+                        SELECT t.name
+                        FROM user_tags ut
+                        JOIN tags t ON ut.tag_id = t.id
+                        WHERE ut.user_id = u.id
+                        ORDER BY ut.index
+                    ) AS tags,
+                    NULL AS distance_km,
+                    (
+                        SELECT COUNT(*) FROM user_tags ut1
+                        JOIN user_tags ut2 ON ut1.tag_id = ut2.tag_id
+                        WHERE ut1.user_id = u.id AND ut2.user_id = %s
+                    ) AS shared_tags
+                FROM users u
+                WHERE u.active_account = TRUE
+                  AND u.completed_profile = TRUE
+                  AND u.id != %s
+                  AND (LOWER(u.gender) = ANY(%s))
+                ORDER BY 
+                    (u.city = %s) DESC,
+                    shared_tags DESC,
+                    u.fame_rating DESC
+                LIMIT 50
+            """,
+            (
+                user_id, user_id, genders_to_show, user_city
+            ))
+        else:
+            cur.execute(f"""
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.city,
+                    u.first_name,
+                    u.birth_date,
+                    u.latitude,
+                    u.longitude,
+                    u.biography,
+                    u.fame_rating,
+                    (
+                        SELECT url 
+                        FROM pictures 
+                        WHERE user_id = u.id AND is_profile_picture = TRUE 
+                        ORDER BY uploaded_at DESC 
+                        LIMIT 1
+                    ) AS main_img,
+                    ARRAY(
+                        SELECT t.name
+                        FROM user_tags ut
+                        JOIN tags t ON ut.tag_id = t.id
+                        WHERE ut.user_id = u.id
+                        ORDER BY ut.index
+                    ) AS tags,
+                    ( 2 * 6371 * asin(
+                        sqrt(
+                            POWER(sin(radians(u.latitude - %s) / 2), 2) +
+                            cos(radians(%s)) * cos(radians(u.latitude)) *
+                            POWER(sin(radians(u.longitude - %s) / 2), 2)
+                        )
+                    ) ) AS distance_km,
+                    (
+                        SELECT COUNT(*) FROM user_tags ut1
+                        JOIN user_tags ut2 ON ut1.tag_id = ut2.tag_id
+                        WHERE ut1.user_id = u.id AND ut2.user_id = %s
+                    ) AS shared_tags
+                FROM users u
+                WHERE u.active_account = TRUE
+                  AND u.completed_profile = TRUE
+                  AND u.id != %s
+                  AND (LOWER(u.gender) = ANY(%s))
+                ORDER BY 
+                    (u.city = %s) DESC,
+                    distance_km ASC,
+                    shared_tags DESC,
+                    u.fame_rating DESC
+                LIMIT 50
+            """,
+            (
+                user_lat, user_lon, user_lat, user_id, user_id, genders_to_show, user_city
+            ))
 
         rows = cur.fetchall()
         columns = [desc[0] for desc in cur.description]
-
         users = [dict(zip(columns, row)) for row in rows]
-
-        return jsonify({"success": True, "users": users}), 200
-
+        print(f"[DEBUG] Usuarios sugeridos encontrados: {len(users)}")
+        for u in users:
+            print(f"[DEBUG] Sugerido: id={u.get('id', 'N/A')} username={u.get('username', 'N/A')} gender={u.get('gender', 'N/A')} city={u.get('city', 'N/A')}")
     except Exception as e:
+        print(f"[ERROR] {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
-
     finally:
         cur.close()
         conn.close()
+    return jsonify({"success": True, "users": users}), 200
+
 
 # POST /profile-viewed
 def set_user_viewed(viewer_user, viewed_user):

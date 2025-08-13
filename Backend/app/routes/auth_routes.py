@@ -41,10 +41,8 @@ def confirm_email_route():
 def reset_password_route():
     data = request.get_json()
     email = data.get("email")
-    print("estamos entro")
     if not email:
         return jsonify({"success": False, "message": "Email is required"}), 400
-    print("hay email")
     success, message = reset_password(email)
     return jsonify({"success": success, "message": message}), 200 if success else 400
 

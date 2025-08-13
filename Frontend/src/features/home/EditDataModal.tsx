@@ -357,7 +357,7 @@ export default function EditDataModal({
             </Button>
             {showGenderOptions && (
               <div className="absolute mt-2 w-full bg-white border border-gray-300 rounded-md shadow-md z-10">
-                {["Male", "Female", "Non_binary"].map((option) => (
+                {["Male", "Female", "Non-binary"].map((option) => (
                   <div
                     key={option}
                     className="px-2 py-2 hover:bg-purple-100 cursor-pointer"

@@ -1,7 +1,7 @@
 from app import create_app, socketio
 from app.sockets import chat_socket
-import eventlet
-import eventlet.wsgi
+import eventlet # type: ignore
+import eventlet.wsgi # type: ignore
 
 app = create_app()
 

@@ -120,7 +120,7 @@ def main():
         insert_static_tags(cur)
 
         print("👥 Generating users...")
-        insert_users_and_data(cur, count=10)  # TODO: users number
+        insert_users_and_data(cur, count=20)  # TODO: users number
 
         cur.close()
         conn.close()

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 
 import { ProfileProvider } from "./ProfileContext";
 import ProfilePage from "../../pages/ProfilePage";
@@ -36,8 +36,8 @@ export default function ProfileRouteWrapper() {
       .finally(() => setLoading(false));
   }, [userId]);
 
-  if (loading || !profileData) return <div>Loading...</div>
-  if (!profileData.completed_profile) return navigate("/");
+  if (loading || !profileData) return <div>Loading...</div>;
+  if (!profileData.completed_profile) return <Navigate to="/" replace />;
   
   const loggedInUserId = localStorage.getItem("userId") ?? "";
 

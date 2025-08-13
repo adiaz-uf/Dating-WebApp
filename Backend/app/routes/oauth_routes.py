@@ -13,7 +13,6 @@ def google_login():
 
 @oauth_bp.route("/google/callback")
 def google_callback():
-    print("👉 CALLBACK TRIGGERED")
     success, message = handle_google_callback(request.url, session.get("oauth_state"))
     if success:
         frontend_url = get_frontend_base_url()

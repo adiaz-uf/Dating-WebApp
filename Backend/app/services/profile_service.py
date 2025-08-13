@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, session # type: ignore
+import requests
 from .db import get_db_connection
 
 profile_bp = Blueprint("profile", __name__)
@@ -138,7 +139,7 @@ def reverse_geocode(latitude, longitude):
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}&zoom=10"
         headers = {"User-Agent": "YourAppName/1.0 (your@email.com)"}
-        response = request.get(url, headers=headers, timeout=5)
+        response = requests.get(url, headers=headers, timeout=5)
         response.raise_for_status()
         data = response.json()
         city = data.get("address", {}).get("city") or \
@@ -148,7 +149,7 @@ def reverse_geocode(latitude, longitude):
                data.get("address", {}).get("county")
         return city
     except Exception as e:
-        print(f"Reverse geocoding failed: {e}")
+        print(f"Reverse geocoding failed in profile: {e}")
         return None
 
 
@@ -157,7 +158,6 @@ def updateUserLocation(user_id, latitude, longitude):
     cur = conn.cursor()
 
     city = reverse_geocode(latitude, longitude)
-
     try:
         cur.execute("""
             UPDATE users

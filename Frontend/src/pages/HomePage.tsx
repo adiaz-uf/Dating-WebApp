@@ -36,14 +36,12 @@ export default function HomePage() {
   });
 
   const navigate = useNavigate();
-  const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
   const location = useLocation();
 
-    // Detect OAuth login redirect and store userId in localStorage if present
+  // Detect OAuth login redirect and store userId in localStorage if present
   useEffect(() => {
     // Handle confirmMsg from navigation state
     if (location.state && location.state.confirmMsg) {
-      setConfirmMsg(location.state.confirmMsg);
       window.history.replaceState({}, document.title);
     }
 
@@ -123,6 +121,10 @@ export default function HomePage() {
     // TODO: Fetch filtered and sorted users from backend based on filters
   };
 
+  const handleAdvancedSearch = async () => {
+    // TODO: Fetch filtered and sorted users from backend based on filters
+  };
+
   if (loading) return <div>Loading profile...</div>;
   if (!profileData) return <div>Error loading profile. Please try again later.</div>;
 
@@ -133,7 +135,6 @@ export default function HomePage() {
           {error && <MessageBox type="error" message={error} show={!!error} />}
           {success && <MessageBox type="success" message="Saved Changes." show={success} />}
         </div>
-
 
         <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-5 px-4 bg-pink-50">
           {/* Filters Panel */}
@@ -243,7 +244,7 @@ export default function HomePage() {
                 />
               </div>
             </div>
-            <Button className="mt-5" onClick={handleSearch}>Advanced Search</Button>
+            <Button className="mt-8" onClick={handleAdvancedSearch}>Advanced Search</Button>
           </div>
 
         </div>
