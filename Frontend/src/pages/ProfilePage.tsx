@@ -162,7 +162,7 @@ export default function ProfilePage() {
             </div>
           )}
           <label className={`mt-1 px-2 rounded-xl border ${online ? "bg-green-100 text-green-600 border-green-600" : "bg-red-100 text-red-600 border-red-600"}`}>
-            {online ? "online" : "offline"}
+            {online ? "online" : userProfile.last_active}
           </label>
           {userProfile.disliked ? (
             <div className="relative group">

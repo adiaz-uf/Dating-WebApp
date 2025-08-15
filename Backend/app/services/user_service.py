@@ -264,6 +264,20 @@ def set_user_not_liked(liker_user, liked_user):
         cur.execute("""
             DELETE FROM likes WHERE liker_id = %s AND liked_id = %s
         """, (liker_user, liked_user,))
+
+        # Delete chat between users if exists
+        cur.execute("""
+            SELECT c.id FROM chats c
+            JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = %s
+            JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = %s
+        """, (liker_user, liked_user))
+        chat = cur.fetchone()
+        if chat:
+            chat_id = chat[0]
+            cur.execute("DELETE FROM messages WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chat_members WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chats WHERE id = %s", (chat_id,))
+
         # Fame rating -2, min 0
         cur.execute("""
             UPDATE users SET fame_rating = GREATEST(fame_rating - 2, 0) WHERE id = %s
