@@ -42,7 +42,7 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
               >     
                 <div className="relative w-10 h-10">
                   <Avatar src={chat.avatar} />
-                  {chat.last_active && isOnline(chat.last_active, 10) ?
+                  {chat.last_active && isOnline(chat.last_active, 30) ?
                     <span className="absolute bottom-0.5 right-0.5 bg-green-400 w-2 h-2 rounded-full border-shadow"/> : ""
                   }
                 </div>

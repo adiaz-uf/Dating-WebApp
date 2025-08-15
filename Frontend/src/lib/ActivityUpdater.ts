@@ -21,15 +21,13 @@ export default function ActivityUpdater() {
         console.error("Error en ping:", err);
       }
     };
-
-    // Ping inicial
     updateActivity();
 
-    // Repetir cada 30 segundos
+    // 30s
     const interval = setInterval(updateActivity, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
-  return null; // No renderiza nada
+  return null;
 }

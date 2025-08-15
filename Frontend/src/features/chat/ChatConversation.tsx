@@ -111,8 +111,8 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
     }
   };
 
-  // Calcular online usando last_active si está disponible
-  const online = chat.last_active ? isOnline(chat.last_active, 10) : false;
+  // check online state
+  const online = chat.last_active ? isOnline(chat.last_active, 30) : false;
 
   return (
     <div className="flex flex-col h-full">
