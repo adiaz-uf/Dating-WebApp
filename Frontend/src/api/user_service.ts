@@ -98,3 +98,19 @@ export async function setNotLikedProfile(data: {
   }
   return response.json();
 }
+
+export async function setUserBlocked(data: {
+  blocked_id: string;
+}) {
+  const response = await fetch(`${API_URL}/users/block`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Block user failed");
+  }
+  return response.json();
+}

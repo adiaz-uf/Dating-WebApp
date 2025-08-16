@@ -17,7 +17,7 @@ CREATE TABLE users (
     city VARCHAR(255) DEFAULT NULL,
 	location_last_updated TIMESTAMP,
 	completed_profile BOOLEAN DEFAULT FALSE,
-    last_active TIMESTAMP,
+    last_active TIMESTAMP DEFAULT NOW(),
 	active_account BOOLEAN DEFAULT FALSE,
 	oauth BOOLEAN DEFAULT FALSE,
 	confirm_token VARCHAR(2048) DEFAULT NULL,

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session # type: ignore
 
-from app.services.user_service import get_suggested_users_data, set_user_liked, set_user_viewed, set_user_not_liked, set_user_disliked, set_user_not_disliked
+from app.services.user_service import get_suggested_users_data, set_user_blocked, set_user_liked, set_user_viewed, set_user_not_liked, set_user_disliked, set_user_not_disliked
 
 users_bp = Blueprint("users", __name__)
 
@@ -98,6 +98,7 @@ def set_disliked_profile():
         return jsonify({"success": False, "message": "disliked user not found"}), 400
 
     return set_user_disliked(disliker_user, disliked_id)
+
 @users_bp.route("/profile-not-disliked", methods=["POST", "OPTIONS"])
 def set_not_disliked_profile():
     if request.method == "OPTIONS":
@@ -118,3 +119,24 @@ def set_not_disliked_profile():
         return jsonify({"success": False, "message": "disliked user not found"}), 400
 
     return set_user_not_disliked(disliker_user, disliked_id)
+
+@users_bp.route("/block", methods=["POST", "OPTIONS"])
+def set_blocked_profile():
+    if request.method == "OPTIONS":
+        response = jsonify({"success": True})
+        response.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin", "*"))
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
+        return response, 200
+
+    blocker_user = session.get("user_id")
+    if not blocker_user:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+
+    data = request.get_json()
+    blocked_id = data.get("blocked_id")
+    if not blocked_id:
+        return jsonify({"success": False, "message": "blocked user not found"}), 400
+
+    return set_user_blocked(blocker_user, blocked_id)

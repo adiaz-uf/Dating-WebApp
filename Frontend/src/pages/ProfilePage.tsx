@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useProfile } from "../features/profile/useProfile";
-import { setLikedProfile, setNotLikedProfile, setDislikedProfile, setNotDislikedProfile } from "../api/user_service";
+import { setUserBlocked } from "../api/user_service";
 import MainLayout from "../layouts/MainLayout";
 import EditProfileModal from "../features/profile/EditProfileModal";
 import { ProfileInfoCard } from "../features/profile/ProfileInfoCard";
@@ -15,15 +15,17 @@ import { BiDislike } from "react-icons/bi";
 import { MdOutlineReportProblem } from "react-icons/md";
 import { calculateAge } from "../lib/CalculateAge";
 import { isOnline } from "../lib/ActivityUpdater";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
-  const { userProfile, isOwnProfile, likeProfile, dislikeProfile, updateProfile } = useProfile();
+  const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
   const [showEdit, setShowEdit] = useState(false);
   const [showInteractions, setShowInteractions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [showMatch, setShowMatch] = useState(false);
+  const navigate = useNavigate();
 
   if (!userProfile) return <div>No profile data.</div>;
 
@@ -34,6 +36,64 @@ export default function ProfilePage() {
   const birthdate = userProfile.birth_date || null;
   const age = calculateAge(birthdate);
   const online = isOnline(userProfile.last_active, 30);
+
+  const handleUserBlock = async () => {
+    try {
+      const data = await setUserBlocked({blocked_id: userProfile.id});
+      setError(data.message);
+      setTimeout(() => navigate("/"), 2000);
+    } catch (err) {
+      setError("Error blocking user");
+    }
+  }
+
+  const handleUserReport = async () => {
+    try {
+      const data = await setUserBlocked({blocked_id: userProfile.id});
+      setError(data.message);
+      setTimeout(() => navigate("/"), 2000);
+    } catch (err) {
+      setError("Error reporting user");
+    }
+  }
+
+  const handleUserLike = async () => {
+    try {
+      const res = await likeProfile(true);
+      // show match modal
+      if (res && res.match) {
+        setShowMatch(true);
+        setTimeout(() => setShowMatch(false), 4000);
+      }
+    } catch (err) {
+      setError("Error liking profile");
+    }
+  }
+
+  const handleUserNotLike = async () => {
+   try {
+      await likeProfile(false);
+      
+    } catch (err) {
+      setError("Error not liking profile");
+    }
+  }
+
+  const handleUserDislike = async () => {
+    try {
+      await dislikeProfile(true);
+    } catch (err) {
+      setError("Error on dislike");
+    }
+  }
+
+  const handleUserNotDislike = async () => {
+    try {
+      await dislikeProfile(false);
+    } catch (err) {
+      setError("Error removing dislike");
+    }
+  }
 
   return (
     <MainLayout>
@@ -95,15 +155,19 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="absolute top-20 right-4 md:right-8 space-y-2 flex gap-3 flex-col items-right justify-right">
-            <Button variant="none" className="cursor-pointer hover:scale-125 text-2xl text-pink-600 ml-auto" onClick={() => setShowReport(!showReport)}>
+            <Button 
+              variant="none" 
+              className="cursor-pointer hover:scale-125 text-2xl text-pink-600 ml-auto" 
+              onClick={() => setShowReport(!showReport)}
+            >
               <MdOutlineReportProblem />
             </Button>
             {showReport && (
               <div className="flex gap-3">
-                <Button>
+                <Button onClick={() =>  handleUserReport()}>
                   Report Fake Account
                 </Button>
-                <Button>
+                <Button onClick={() => handleUserBlock()}>
                   Block User
                 </Button>
               </div>
@@ -121,14 +185,7 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={async () => {
-                  try {
-                    await setNotLikedProfile({ liked_id: userProfile.id });
-                    updateProfile({ liked: false });
-                  } catch (err) {
-                    setError("Error removing like");
-                  }
-                }}
+                onClick={() => handleUserNotLike()}
               >
                 <FaHeart />
               </Button>
@@ -141,18 +198,7 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={async () => {
-                  try {
-                    const res = await setLikedProfile({ liked_id: userProfile.id });
-                    updateProfile({ liked: true, disliked: false });
-                    if (res && res.match) {
-                      setShowMatch(true);
-                      setTimeout(() => setShowMatch(false), 4000);
-                    }
-                  } catch (err) {
-                    setError("Error liking profile");
-                  }
-                }}
+                onClick={() => handleUserLike()}
               >
                 <FaRegHeart />
               </Button>
@@ -169,14 +215,7 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={async () => {
-                  try {
-                    await setNotDislikedProfile({ disliked_id: userProfile.id });
-                    updateProfile({ disliked: false });
-                  } catch (err) {
-                    setError("Error removing dislike");
-                  }
-                }}
+                onClick={() => handleUserNotDislike()}
               >
                 <BiSolidDislike/>
               </Button>
@@ -189,14 +228,7 @@ export default function ProfilePage() {
               <Button
                 className="text-xl"
                 variant="outline"
-                onClick={async () => {
-                  try {
-                    await setDislikedProfile({ disliked_id: userProfile.id });
-                    updateProfile({ disliked: true, liked: false });
-                  } catch (err) {
-                    setError("Error disliking profile");
-                  }
-                }}
+                onClick={() => handleUserDislike()}
               >
                 <BiDislike/>
               </Button>
@@ -242,7 +274,7 @@ export default function ProfilePage() {
         {/* User Images List */}
         <div className="flex flex-wrap gap-5 items-center justify-center my-8">
           {(userProfile?.images || [])
-            .filter(imageUrl => imageUrl !== userProfile.main_img) // Filtrar la foto de perfil
+            .filter(imageUrl => imageUrl !== userProfile.main_img)
             .map((imageUrl, index) => (
               imageUrl ? (
                 <img 

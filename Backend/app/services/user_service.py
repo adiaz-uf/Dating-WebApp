@@ -52,6 +52,7 @@ def get_suggested_users_data(user_id):
         # 1. Prioritys: same city, then distance, tags and fame
         # 2. Only active users and completed profile
         # 3. Only compatible genders
+        # 4. Discard blocked users
         if user_lat is None or user_lon is None:
             cur.execute(f"""
                 SELECT 
@@ -86,9 +87,12 @@ def get_suggested_users_data(user_id):
                     ) AS shared_tags
                 FROM users u
                 WHERE u.active_account = TRUE
-                  AND u.completed_profile = TRUE
-                  AND u.id != %s
-                  AND (LOWER(u.gender) = ANY(%s))
+                    AND u.completed_profile = TRUE
+                    AND u.id != %s
+                    AND (LOWER(u.gender) = ANY(%s))
+                    AND u.id NOT IN (
+                            SELECT blocked_id FROM blocks WHERE blocker_id = %s
+                    )
                 ORDER BY 
                     (u.city = %s) DESC,
                     shared_tags DESC,
@@ -96,7 +100,7 @@ def get_suggested_users_data(user_id):
                 LIMIT 50
             """,
             (
-                user_id, user_id, genders_to_show, user_city
+                user_id, user_id, genders_to_show, user_id, user_city
             ))
         else:
             cur.execute(f"""
@@ -138,9 +142,12 @@ def get_suggested_users_data(user_id):
                     ) AS shared_tags
                 FROM users u
                 WHERE u.active_account = TRUE
-                  AND u.completed_profile = TRUE
-                  AND u.id != %s
-                  AND (LOWER(u.gender) = ANY(%s))
+                    AND u.completed_profile = TRUE
+                    AND u.id != %s
+                    AND (LOWER(u.gender) = ANY(%s))
+                    AND u.id NOT IN (
+                            SELECT blocked_id FROM blocks WHERE blocker_id = %s
+                    )
                 ORDER BY 
                     (u.city = %s) DESC,
                     distance_km ASC,
@@ -149,7 +156,7 @@ def get_suggested_users_data(user_id):
                 LIMIT 50
             """,
             (
-                user_lat, user_lon, user_lat, user_id, user_id, genders_to_show, user_city
+                user_lat, user_lon, user_lat, user_id, user_id, genders_to_show, user_id, user_city
             ))
 
         rows = cur.fetchall()
@@ -357,6 +364,44 @@ def set_user_not_disliked(disliker_user, disliked_user):
         """, (disliked_user,))
         conn.commit()
         return jsonify({"success": True, "message": "Dislike removed and fame_rating increased"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+# POST /block
+def set_user_blocked(blocker_user, blocked_user):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT id FROM blocks WHERE blocker_id = %s AND blocked_id = %s
+        """, (blocker_user, blocked_user,))
+        existing = cur.fetchone()
+        if not existing:
+            cur.execute("""
+                INSERT INTO blocks (blocker_id, blocked_id)
+                VALUES (%s, %s)
+            """, (blocker_user, blocked_user,))
+            
+
+        # Delete chat between users if exists
+        cur.execute("""
+            SELECT c.id FROM chats c
+            JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = %s
+            JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = %s
+        """, (blocker_user, blocked_user))
+        chat = cur.fetchone()
+        if chat:
+            chat_id = chat[0]
+            cur.execute("DELETE FROM messages WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chat_members WHERE chat_id = %s", (chat_id,))
+            cur.execute("DELETE FROM chats WHERE id = %s", (chat_id,))
+        conn.commit()
+        return jsonify({"success": True, "message": "Profile block added"}), 201
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
     finally:

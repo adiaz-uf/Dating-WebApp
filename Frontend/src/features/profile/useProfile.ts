@@ -1,32 +1,40 @@
 import { useProfileContext } from "./ProfileContext";
+import { setLikedProfile, setNotLikedProfile, setDislikedProfile, setNotDislikedProfile } from "../../api/user_service";
+
 
 export const useProfile = () => {
   const { userProfile, isOwnProfile, setUserProfile } = useProfileContext();
 
-  const likeProfile = (like: boolean) => {
-    // TODO test function with mockData
-    if (userProfile) {
+  const likeProfile = async (like: boolean) => {
+    if (!userProfile) return;
+    try {
       if (like) {
-        console.log("set like", userProfile?.id);
+        const res = await setLikedProfile({ liked_id: userProfile.id });
         setUserProfile({ ...userProfile, liked: true, disliked: false });
+        return res;
       } else {
-        console.log("unset like", userProfile?.id);
+        await setNotLikedProfile({ liked_id: userProfile.id });
         setUserProfile({ ...userProfile, liked: false });
+        return null;
       }
+    } catch (err) {
+      console.error("error liking user")
+      return null;
     }
-    // lógica futura para llamar a la API
   };
 
-  const dislikeProfile = (dislike: boolean) => {
-    // TODO test function with mockData
-    if (userProfile) {
+  const dislikeProfile = async (dislike: boolean) => {
+    if (!userProfile) return;
+    try {
       if (dislike) {
-        console.log("set dislike", userProfile?.id);
+        await setDislikedProfile({ disliked_id: userProfile.id });
         setUserProfile({ ...userProfile, liked: false, disliked: true });
       } else {
-        console.log("unset dislike", userProfile?.id);
+        await setNotDislikedProfile({ disliked_id: userProfile.id });
         setUserProfile({ ...userProfile, disliked: false });
       }
+    } catch (err) {
+      console.error("error disliking user")
     }
   };
 
