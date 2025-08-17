@@ -62,14 +62,14 @@ export default function ProfileInteractionsModal ({onClose}: ProfileInteractions
 		fetchRecievedLikes();
 	}, []);
 
-		const handleViewProfile = async (user_id: any) => {
-			try {
-				await setViewedProfile({ viewed_id: user_id });
-				navigate(`/profile/${user_id}`)
-			} catch (err: any) {
-					console.error("Error creating profile view:", err);
-			}
+	const handleViewProfile = async (user_id: any) => {
+		try {
+			await setViewedProfile({ viewed_id: user_id });
+			navigate(`/profile/${user_id}`)
+		} catch (err: any) {
+				console.error("Error creating profile view:", err);
 		}
+	}
 
 	return (
 		<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">

@@ -260,3 +260,37 @@ def get_user_recieved_views(user_id):
         cur.close()
         conn.close()
     return jsonify({"success": True, "users": users}), 200
+
+def get_is_liked_by_user(session_user_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT 1 FROM likes WHERE liked_id = %s AND liker_id = %s
+        """,(session_user_id, user_id,))
+        liked = cur.fetchone() is not None
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+    return jsonify({"success": liked}), 200
+    
+def get_exists_chat_with(session_user_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+                SELECT c.id FROM chats c
+                JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = %s
+                JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = %s
+            """, (session_user_id, user_id))
+        chat_exists = cur.fetchone() is not None
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+    return jsonify({"success": chat_exists}), 200

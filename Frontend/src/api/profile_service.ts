@@ -99,3 +99,33 @@ export async function fetchUserRecievedViews() {
 
   return response.json();
 }
+
+export async function isLikedByUser(user_id: any) {
+  const url =`${API_URL}/profile/liked-by/${user_id}`;
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Fetching is user liked by failed");
+  }
+
+  return response.json();
+}
+
+export async function gotChatInCommon(user_id: any) {
+  const url =`${API_URL}/profile/chat-with/${user_id}`;
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Fetching users got chat in common failed");
+  }
+
+  return response.json();
+}

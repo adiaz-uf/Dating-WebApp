@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useProfile } from "../features/profile/useProfile";
 import { setUserBlocked } from "../api/user_service";
 import MainLayout from "../layouts/MainLayout";
@@ -13,9 +13,11 @@ import { FaRegHeart } from "react-icons/fa6";
 import { BiSolidDislike } from "react-icons/bi";
 import { BiDislike } from "react-icons/bi";
 import { MdOutlineReportProblem } from "react-icons/md";
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import { calculateAge } from "../lib/CalculateAge";
 import { isOnline } from "../lib/ActivityUpdater";
 import { useNavigate } from "react-router-dom";
+import { gotChatInCommon, isLikedByUser } from "../api/profile_service";
 
 export default function ProfilePage() {
   const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
@@ -25,6 +27,8 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [showMatch, setShowMatch] = useState(false);
+  const [recievedLike, setRecievedLike] = useState(false);
+  const [chatInCommon, setChatInCommon] = useState(false);
   const navigate = useNavigate();
 
   if (!userProfile) return <div>No profile data.</div>;
@@ -95,6 +99,38 @@ export default function ProfilePage() {
     }
   }
 
+  useEffect(() => {
+      const fetchRecievedLike = async () => {
+        try {
+          const data = await isLikedByUser(userProfile.id);
+          if (data && data.success) {
+            setRecievedLike(true);
+          } else {
+            setRecievedLike(false);
+          }
+        } catch (err) {
+          setRecievedLike(false);
+        } finally {
+        }
+      };
+      const fetchChatInCommon = async () => {
+        try {
+          const data = await gotChatInCommon(userProfile.id);
+          if (data && data.success) {
+            setChatInCommon(true);
+          } else {
+            setChatInCommon(false);
+          }
+        } catch (err) {
+          setChatInCommon(false);
+        } finally {
+        }
+      };
+      fetchRecievedLike();
+      fetchChatInCommon();
+    }, []);
+  
+
   return (
     <MainLayout>
       <div className="absolute top-4 right-4 z-50 space-y-2">
@@ -108,10 +144,30 @@ export default function ProfilePage() {
             <FaMedal/>
             <label>{userProfile.fame_rating}</label>
           </span>
-          <span className="absolute -right-24 top-5 -translate-y-1/2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="absolute -right-0 top-18 -translate-y-1/2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
             Fame Rating
           </span>
         </div>
+        {recievedLike && 
+        <div className="relative group">
+          <span className="relative flex gap-2 !p-3 !px-3 group bg-pink-600 rounded-xl text-white items-center justify-center font-medium">
+            <FaHeart/>
+          </span>
+          <span className="absolute -right-0 top-18 -translate-y-1/2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            Liked You
+          </span>
+        </div>
+        }
+        {chatInCommon && 
+        <div className="relative group">
+          <span className="relative flex gap-2 !p-3 !px-3 group bg-pink-600 rounded-xl text-white items-center justify-center font-medium">
+            <IoChatbubbleEllipsesSharp/>
+          </span>
+          <span className="absolute -right-0 top-18 -translate-y-1/2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            Chat in common
+          </span>
+        </div>
+        }
       </div>
         {isOwnProfile ? (
           <div className="absolute top-20 right-4 md:right-8 space-y-2 flex gap-3">
