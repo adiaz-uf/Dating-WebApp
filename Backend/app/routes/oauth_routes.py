@@ -17,8 +17,8 @@ def google_callback():
     if success:
         frontend_url = get_frontend_base_url()
         user_id = session.get("user_id")
-        # Redirect to login with userId as query param so frontend can store it
-        return redirect(f"{frontend_url}/?userId={user_id}")
+        # Redirect to oauth-callback with userId as query param so frontend can store it
+        return redirect(f"{frontend_url}/oauth-callback?userId={user_id}")
     else:
         return jsonify({"success": False, "message": message}), 400
 
@@ -35,6 +35,6 @@ def intra42_callback():
     if success:
         frontend_url = get_frontend_base_url()
         user_id = session.get("user_id")
-        return redirect(f"{frontend_url}/?userId={user_id}")
+        return redirect(f"{frontend_url}/oauth-callback?userId={user_id}")
     else:
         return jsonify({"success": False, "message": message}), 400

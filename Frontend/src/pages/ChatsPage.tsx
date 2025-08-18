@@ -1,17 +1,33 @@
 import { useEffect, useState } from "react";
 import { fetchUserChats } from "../api/chat_service";
+import { fetchUserProfile } from "../api/profile_service";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChatLayout } from "../layouts/ChatLayout";
 import { ChatList } from "../features/chat/ChatList";
 import { ChatConversation } from "../features/chat/ChatConversation";
 
 export default function ChatsPage() {
+  const navigate = useNavigate();
 
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [isMobileView, setIsMobileView] = useState<boolean>(window.innerWidth < 768);
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileChecked, setProfileChecked] = useState(false);
+  // Check if user is logged in, else redirect to login
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        await fetchUserProfile();
+        setProfileChecked(true);
+      } catch (err) {
+        navigate("/login");
+      }
+    };
+    checkProfile();
+  }, [navigate]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,6 +38,7 @@ export default function ChatsPage() {
   }, []);
 
   useEffect(() => {
+    if (!profileChecked) return;
     setLoading(true);
     fetchUserChats()
       .then((data) => {
@@ -56,7 +73,7 @@ export default function ChatsPage() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [profileChecked]);
 
   useEffect(() => {
     if (isMobileView && selectedChat) {
@@ -90,6 +107,7 @@ export default function ChatsPage() {
     setSelectedChat(null);
   };
 
+  if (!profileChecked) return null;
   if (loading) return <div className="p-8 text-center">Cargando chats...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 

@@ -27,7 +27,7 @@ def create_app():
     # Enable CORS for all routes, allowing credentials (cookies, etc.)
     CORS(app, supports_credentials=True)
 
-    # Configure upload folder for pictures
+    # Configure upload folder for pictures TODO
     #app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
     #if not os.path.exists(app.config['UPLOAD_FOLDER']):
     #    os.makedirs(app.config['UPLOAD_FOLDER'])

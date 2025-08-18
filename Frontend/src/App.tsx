@@ -11,6 +11,8 @@ import ProfileRouteWrapper from "./features/profile/ProfileRouteWrapper";
 import NotificationsPage from "./pages/NotificationsPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 import ActivityUpdater from "./lib/ActivityUpdater";
+import ProtectedRoute from "./lib/ProtectedRoute";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
 function Logout() {
     const navigate = useNavigate();
@@ -36,17 +38,43 @@ function App() {
     <BrowserRouter>
       {isLoggedIn && <ActivityUpdater />}
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/chats" element={<ChatsPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile" element={<ProfileRouteWrapper />} />
-        <Route path="/profile/:userId" element={<ProfileRouteWrapper />} />
         <Route path="/reset-pass" element={<ResetPassPage />} />
         <Route path="/new-pass" element={<NewPassPage />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+
+        {/* OAuth callback route */}
+        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
+
+        {/* Protected routes */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/chats" element={
+          <ProtectedRoute>
+            <ChatsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfileRouteWrapper />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile/:userId" element={
+          <ProtectedRoute>
+            <ProfileRouteWrapper />
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
