@@ -7,7 +7,8 @@ export async function getApproxLocationByIP() {
 
     const data = await response.json();
     const { latitude, longitude } = data;
-
+    console.log("getApproxLocationByIP: ", latitude, longitude);
+    
     await updateUserLocation(latitude, longitude);
 
   } catch (error) {

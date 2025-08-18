@@ -82,7 +82,10 @@ export default function HomePage() {
       },
       (error) => {
         console.warn("User denied location or error occurred", error);
-        getApproxLocationByIP();
+        if (!profileData?.latitude && !profileData?.longitude && !sessionStorage.getItem("ipLocationTried")) {
+          sessionStorage.setItem("ipLocationTried", "1");
+          getApproxLocationByIP();
+        }
       }
     );
   }, []);

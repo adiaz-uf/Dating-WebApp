@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_URL } from "../api/config";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     if (!localStorage.getItem("userId")) {
       // Check session with backend
-      fetch("/api/profile", { credentials: "include" })
+      fetch(`${API_URL}/profile`, { credentials: "include" })
         .then(res => {
           if (res.ok) return res.json();
           throw new Error("Not logged in");
