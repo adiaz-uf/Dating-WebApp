@@ -147,7 +147,7 @@ export default function HomePage() {
           {success && <MessageBox type="success" message="Saved Changes." show={success} />}
         </div>
 
-        <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-5 px-4 bg-pink-50">
+        <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 place-items-center gap-5 px-4 bg-pink-50">
           {/* Filters Panel */}
           <div className="w-full max-w-6xl bg-white shadow-md rounded-3xl p-6 mb-6">
             <div className="flex items-center flex-col justify-center flex-wrap gap-4">
@@ -260,7 +260,7 @@ export default function HomePage() {
 
         </div>
           {/* Suggested or Searched Profiles */}
-          <div className='w-full gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-4'>
+          <div className='w-full gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 px-4'>
             {suggestedUsers.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}
