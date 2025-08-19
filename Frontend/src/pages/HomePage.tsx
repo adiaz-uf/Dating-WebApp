@@ -13,6 +13,7 @@ import { Slider } from "../features/home/Slider";
 import { Select } from "../features/home/Select";
 import { UserCard } from "../features/home/UserCard";
 import { fetchSuggestedUsers } from "../api/user_service";
+import { connectNotificationSocket } from "../api/notifications_socket";
 
 export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false);
@@ -62,8 +63,8 @@ export default function HomePage() {
       setLoading(true);
       try {
         const data = await fetchUserProfile();
-        setProfileData(data.profile || data);
         if (!data) return navigate("/login");
+        setProfileData(data.profile || data);
       } catch (err) {
         return navigate("/login");
       } finally {
@@ -72,6 +73,13 @@ export default function HomePage() {
     };
     fetchProfile();
   }, []);
+
+  // Connect reminder socket
+  useEffect(() => {
+  if (profileData) {
+    connectNotificationSocket(profileData.id);
+  }
+}, [profileData]);
 
   // geolocator by browser or by IP
   useEffect(() => {

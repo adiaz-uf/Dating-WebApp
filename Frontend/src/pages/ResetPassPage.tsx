@@ -40,7 +40,6 @@ export default function ResetPassPage() {
     } */
 
   try {
-      console.log("debug: go to request_resetpass");
       await requestResetPass(email);
       setSuccess(true);
       setTimeout(() => {

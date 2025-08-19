@@ -16,6 +16,7 @@ export default function ChatsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
+  
   // Check if user is logged in, else redirect to login
   useEffect(() => {
     const checkProfile = async () => {

@@ -92,6 +92,16 @@ CREATE TABLE messages (
     sent_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL, -- 'like', 'view', 'message', 'match', 'dislike'
+    content TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE INDEX idx_users_location ON users(latitude, longitude);
 CREATE INDEX idx_user_tags_user_id ON user_tags(user_id);
 CREATE INDEX idx_user_tags_tag_id ON user_tags(tag_id);
@@ -100,3 +110,4 @@ CREATE INDEX idx_profile_views_viewer_id ON profile_views(viewer_id);
 CREATE INDEX idx_profile_views_viewed_id ON profile_views(viewed_id);
 CREATE INDEX idx_likes_liker_id ON likes(liker_id);
 CREATE INDEX idx_likes_liked_id ON likes(liked_id);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);

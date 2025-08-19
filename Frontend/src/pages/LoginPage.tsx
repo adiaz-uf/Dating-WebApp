@@ -47,14 +47,12 @@ export default function LoginPage() {
       return;
     } */
 
-    // send login POST
     try {
-      await loginUser({ username, password});
+      await loginUser({ username, password });
 
-  setSuccess(true);
-  setError(null);
-  setTimeout(() => { setSuccess(false); navigate("/"); }, 3000);
-
+      setSuccess(true);
+      setError(null);
+      setTimeout(() => { setSuccess(false); navigate("/"); }, 3000);
     } catch (err: any) {
       setError(err.message);
       setSuccess(false);

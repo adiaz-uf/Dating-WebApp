@@ -183,7 +183,6 @@ export default function EditProfileModal({
       const data = { value: normalizedVal, index: index.toString() };
       await addTag(data);
       setTags(updatedTags);
-      console.log("created tag: ", index, formattedVal);
     } catch (err: any) {
       if (err?.response?.status === 409 || err?.message?.includes("already exists")) {
         setError("Tag already exists");

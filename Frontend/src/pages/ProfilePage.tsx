@@ -18,6 +18,7 @@ import { calculateAge } from "../lib/CalculateAge";
 import { isOnline } from "../lib/ActivityUpdater";
 import { useNavigate } from "react-router-dom";
 import { gotChatInCommon, isLikedByUser } from "../api/profile_service";
+import { getNotificationSocket, connectNotificationSocket, onNotificationSocketRegistered } from "../api/notifications_socket";
 
 export default function ProfilePage() {
   const { userProfile, isOwnProfile, likeProfile, dislikeProfile } = useProfile();
@@ -64,6 +65,21 @@ export default function ProfilePage() {
   const handleUserLike = async () => {
     try {
       const res = await likeProfile(true);
+      const fromId = localStorage.getItem("userId");
+      if (fromId && userProfile?.id) {
+        connectNotificationSocket(fromId);
+        onNotificationSocketRegistered(() => {
+          const socket = getNotificationSocket();
+          if (socket && socket.connected) {
+            socket.emit("send_reminder", {
+              to: userProfile.id,
+              from: fromId,
+              type: "like",
+              content: ` liked your profile`,
+            });
+          }
+        });
+      }
       // show match modal
       if (res && res.match) {
         setShowMatch(true);

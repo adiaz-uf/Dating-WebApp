@@ -1,26 +1,16 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BiLogOut } from "react-icons/bi";
-import {IconContext} from "react-icons";
+import { IconContext } from "react-icons";
 import { FaBell } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./Button";
+import { useAppSelector } from "../store/hooks";
 
-
-type NavbarProps = {
-  notifications: Notification[];
-  userId: string;
-};
-
-type Notification = {
-  id: string;
-  message: string;
-  read: boolean;
-};
-
-export const Navbar = ({ notifications, userId }: NavbarProps) => {
+export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const notifications = useAppSelector((state) => state.notifications.notifications);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const navLinks = [

@@ -11,6 +11,7 @@ from .routes.picture_routes import picture_bp
 from .routes.tag_routes import tag_bp
 from .routes.user_routes import users_bp
 from .routes.chat_routes import chats_bp
+from .routes.reminder_routes import reminder_bp
 
 socketio = SocketIO(cors_allowed_origins="*") 
 
@@ -41,6 +42,7 @@ def create_app():
     app.register_blueprint(tag_bp, url_prefix="/tag")
     app.register_blueprint(users_bp, url_prefix="/users", strict_slashes=False)
     app.register_blueprint(chats_bp, url_prefix="/chats")
+    app.register_blueprint(reminder_bp, url_prefix="/reminder")
 
     socketio.init_app(app, cors_allowed_origins="*")
 

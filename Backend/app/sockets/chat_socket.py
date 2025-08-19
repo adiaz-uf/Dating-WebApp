@@ -1,4 +1,3 @@
-
 from flask_socketio import emit, join_room, leave_room # type: ignore
 from flask import session # type: ignore
 from ..services.chat_service import post_message_to_chat
