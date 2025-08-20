@@ -7,6 +7,8 @@ import bcrypt # type: ignore
 from faker import Faker # type: ignore
 from datetime import datetime
 from dotenv import load_dotenv # type: ignore
+import math
+
 
 load_dotenv()
 
@@ -33,6 +35,7 @@ def random_coords():
     return lat, lon
 
 def reverse_geocode(lat, lon):
+    return None
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=10"
         headers = {"User-Agent": "YourAppName/1.0 (your@email.com)"}
@@ -108,7 +111,7 @@ def insert_users_and_data(cur, count=500):
                 ON CONFLICT DO NOTHING;
             """, (user_id, tag, idx))
 
-        time.sleep(1)  # 1 request per second to avoid Nominatim blocks
+        #time.sleep(1)  # 1 request per second to avoid Nominatim blocks
 
 def main():
     try:
@@ -120,7 +123,7 @@ def main():
         insert_static_tags(cur)
 
         print("👥 Generating users...")
-        insert_users_and_data(cur, count=5)  # TODO: users number
+        insert_users_and_data(cur, count=500)  # TODO: users number
 
         cur.close()
         conn.close()

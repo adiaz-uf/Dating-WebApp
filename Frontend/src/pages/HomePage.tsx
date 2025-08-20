@@ -76,27 +76,38 @@ export default function HomePage() {
 
   // Connect reminder socket
   useEffect(() => {
-  if (profileData) {
-    connectNotificationSocket(profileData.id);
-  }
-}, [profileData]);
+    if (profileData) {
+      connectNotificationSocket(profileData.id);
+    }
+  }, [profileData]);
 
-  // geolocator by browser or by IP
+  // Geolocator by browser or by IP
+  // Only run this effect when profileData is loaded (not undefined)
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        updateUserLocation(latitude, longitude);
-      },
-      (error) => {
-        console.warn("User denied location or error occurred", error);
-        if (!profileData?.latitude && !profileData?.longitude && !sessionStorage.getItem("ipLocationTried")) {
-          sessionStorage.setItem("ipLocationTried", "1");
-          getApproxLocationByIP();
+    if (!profileData) return; // Wait for profileData to be loaded from backend
+
+    // Only try to update if latitude or longitude are null or undefined
+    const lat = profileData.latitude;
+    const lon = profileData.longitude;
+    if (lat === null || lat === undefined || lon === null || lon === undefined) {
+      console.log("Update location: ", lat, lon);
+      sessionStorage.removeItem("ipLocationTried");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          updateUserLocation(latitude, longitude);
+        },
+        (error) => {
+          console.warn("User denied location or error occurred", error);
+          // If still missing coordinates and not already tried IP, try IP geolocation
+          if ((lat === null || lat === undefined || lon === null || lon === undefined) 
+            && !sessionStorage.getItem("ipLocationTried")) {
+            getApproxLocationByIP();
+          }
         }
-      }
-    );
-  }, []);
+      );
+    }
+  }, [profileData]);
 
   // fetch suggested users
   useEffect(() => {

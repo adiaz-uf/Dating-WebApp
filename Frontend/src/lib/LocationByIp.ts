@@ -1,17 +1,18 @@
 import { updateUserLocation } from "../api/profile_service";
 
 export async function getApproxLocationByIP() {
-  try {
+  try {    
+    
     const response = await fetch("https://ipapi.co/json/");
-    if (!response.ok) throw new Error("Failed to fetch IP location");
-
+      
     const data = await response.json();
     const { latitude, longitude } = data;
     console.log("getApproxLocationByIP: ", latitude, longitude);
     
     await updateUserLocation(latitude, longitude);
-
+    sessionStorage.setItem("ipLocationTried", "located");
   } catch (error) {
-    console.error("Error getting IP-based location:", error);
+    await updateUserLocation(40.515015, -3.663826);
+    sessionStorage.setItem("ipLocationTried", "located");
   }
 }

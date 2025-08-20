@@ -156,7 +156,7 @@ def get_suggested_users_data(user_id):
                 LIMIT 50
             """,
             (
-                user_lat, user_lon, user_lat, user_id, user_id, genders_to_show, user_id, user_city
+                user_lat, user_lat, user_lon, user_id, user_id, genders_to_show, user_id, user_city
             ))
 
         rows = cur.fetchall()
