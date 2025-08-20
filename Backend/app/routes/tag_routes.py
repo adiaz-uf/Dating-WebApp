@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session # type: ignore
 
-from app.services.tag_service import add_or_update_tag, suggest_tags
+from app.services.tag_service import add_or_update_tag, suggest_tags, replace_all_tags
 
 tag_bp = Blueprint("tag", __name__)
 
@@ -30,3 +30,18 @@ def add_tag():
     tag_index = data["index"]
 
     return add_or_update_tag(session_user_id, tag_name, tag_index)
+
+# POST /tag/replace
+@tag_bp.route("/replace", methods=["POST", "OPTIONS"])
+def replace_tags():
+    if request.method == "OPTIONS":
+        return '', 200
+    session_user_id = session.get("user_id")
+    if not session_user_id:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+
+    data = request.get_json()
+    tags = data.get("tags", [])
+    if not isinstance(tags, list):
+        return jsonify({"success": False, "message": "Tags must be a list"}), 400
+    return replace_all_tags(session_user_id, tags)

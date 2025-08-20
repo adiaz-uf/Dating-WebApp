@@ -5,8 +5,7 @@ import { Button } from "../../components/Button";
 import { MessageBox } from "../../components/MessageBox";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
-import { addTag, suggestTags } from "../../api/tag_service";
-import { calculateAge } from "../../lib/CalculateAge";
+import { suggestTags, replaceAllTags } from "../../api/tag_service";
 
 const ResizableInput = ({
   value,
@@ -169,30 +168,16 @@ export default function EditDataModal({
   };
 
   const handleCommitTag = async (index: number, val: string) => {
-    // send to backend without '#'
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
-    // keep local state with '#'
     const formattedVal = '#' + normalizedVal;
     const updatedTags = [...tags];
     updatedTags[index] = formattedVal;
-
     const normalizedTags = updatedTags.map((t) => t.trim().replace(/^#+/, '').toLowerCase());
     if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
       setError("Empty or existing tag");
       return;
     }
-    try {
-      const data = { value: normalizedVal, index: index.toString() };
-      await addTag(data);
-      setTags(updatedTags);
-    } catch (err: any) {
-      if (err?.response?.status === 409 || err?.message?.includes("already exists")) {
-        setError("Tag already exists");
-      } else {
-        console.error("Error creating tag:", err);
-        onSaveError?.("Error creating tag");
-      }
-    }
+    setTags(updatedTags);
   };
 
 
@@ -206,8 +191,7 @@ export default function EditDataModal({
 
   const handleSave = async () => {
     try {
-      /* TODO: form checks 
-      if (!userProfile.main_img) {
+      /* if (!userProfile.main_img) { TODO: Modal validations
         setError("Please upload a profile picture");
         return;
       }
@@ -218,21 +202,7 @@ export default function EditDataModal({
       }
 
       if (!birth_date) {
-      || useState(toDateInputValue(new Date())
         setError("Please select your birth date");
-        return;
-      }
-
-      // Age validation: must be >= 18
-      const age = calculateAge(birth_date);
-      if (!age)
-      {
-        setError("Invalid date.");
-        return;
-      }
-  
-      if (age < 18) {
-        setError("You must be at least 18 years old.");
         return;
       }
 
@@ -246,37 +216,38 @@ export default function EditDataModal({
         return;
       }
 
+
       if (!tags || tags.length === 0 || tags.every(t => !t || t.trim().length <= 1)) {
         setError("Please add at least one tag");
         return;
       } */
 
-        if (!birth_date) {
+      if (!birth_date) {
         setBirthdate(toDateInputValue(new Date()));
         /* setError("Please select your birth date");
         return; */
       }
 
+      const tagsToSend = tags
+        .map(t => t.trim().replace(/^#+/, ''))
+        .filter(t => t.length > 0);
+      await replaceAllTags(tagsToSend);
+
       const updatedProfile = {
         ...userProfile,
         biography: bio,
         birth_date,
-        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t), // send without # to backend
+        tags: tagsToSend,
         images,
         gender,
         sexual_preferences: sexualOrientation,
         completed_profile: true,
       };
-
-      console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
-
-      // Update global context
       if (ctx && ctx.setUserProfile) {
-        ctx.setUserProfile({ ...updatedProfile, tags: formatTags(updatedProfile.tags) });
+        ctx.setUserProfile({ ...updatedProfile, tags: formatTags(tagsToSend) });
       }
-      setTags(formatTags(updatedProfile.tags));
-
+      setTags(formatTags(tagsToSend));
       onSaveSuccess?.();
       onClose();
     } catch (error: any) {
@@ -441,10 +412,10 @@ export default function EditDataModal({
                     onClick={async () => {
                       try {
                         await deletePicture(img);
-                        // Actualizar el estado local
+                        // local state
                         const newImages = images.filter(image => image !== img);
                         setImages(newImages);
-                        // Actualizar el contexto
+                        // context
                         if (ctx && ctx.setUserProfile && userProfile) {
                           ctx.setUserProfile({
                             ...userProfile,
@@ -481,11 +452,8 @@ export default function EditDataModal({
                     if (e.target.files && e.target.files[0]) {
                       try {
                         const url = await uploadPicture(e.target.files[0]);
-                        // Actualizar el estado con la URL del servidor
                         setImages([...images, url]);
-                        // Limpiar el input
                         e.target.value = "";
-                        // Actualizar contexto si es necesario
                         if (ctx && ctx.setUserProfile && userProfile) {
                           ctx.setUserProfile({
                             ...userProfile,

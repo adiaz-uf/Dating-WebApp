@@ -5,7 +5,7 @@ import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
-import { addTag, suggestTags } from "../../api/tag_service";
+import { suggestTags, replaceAllTags } from "../../api/tag_service";
 import { MessageBox } from "../../components/MessageBox";
 import MapSelector from "../../components/MapSelector";
 
@@ -31,7 +31,6 @@ const ResizableInput = ({
     }
   }, [value]);
 
-  // Sugerencias dinámicas
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!value || value.length < 2) {
@@ -166,31 +165,18 @@ export default function EditProfileModal({
   };
 
   const handleCommitTag = async (index: number, val: string) => {
-    // delete # in backend
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
-    // keep # in local state
     const formattedVal = '#' + normalizedVal;
-    const updatedTags = [...tags];
-    updatedTags[index] = formattedVal;
-
-    // check empty or duplicated tags
-    const normalizedTags = updatedTags.map((t) => t.trim().replace(/^#+/, '').toLowerCase());
+    const normalizedTags = tags.map((t, i) => i === index ? normalizedVal : t.trim().replace(/^#+/, '').toLowerCase());
     if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
       setError("Empty or existing tag");
       return;
     }
-    try {
-      const data = { value: normalizedVal, index: index.toString() };
-      await addTag(data);
-      setTags(updatedTags);
-    } catch (err: any) {
-      if (err?.response?.status === 409 || err?.message?.includes("already exists")) {
-        setError("Tag already exists");
-      } else {
-        console.error("Error creating tag:", err);
-        onSaveError?.("Error creating tag");
-      }
-    }
+    setTags(prevTags => {
+      const newTags = [...prevTags];
+      newTags[index] = formattedVal;
+      return newTags;
+    });
   };
 
   const handleGenreChange = (newValue: string) => {
@@ -203,10 +189,15 @@ export default function EditProfileModal({
 
   const handleSave = async () => {
     try {
+      const tagsToSend = tags
+        .map(t => t.trim().replace(/^#+/, ''))
+        .filter(t => t.length > 0);
+      await replaceAllTags(tagsToSend);
+
       const updatedProfile = {
         ...userProfile,
         biography: bio,
-        tags: tags.map(t => t.startsWith('#') ? t.slice(1) : t),
+        tags: tagsToSend,
         images,
         first_name: name,
         last_name: lastName,
@@ -214,16 +205,11 @@ export default function EditProfileModal({
         gender,
         sexual_preferences: sexualOrientation,
       };
-
-      console.log("Saving profile:", updatedProfile);
       await updateUserProfile(updatedProfile);
-
-      // Update global context
       if (ctx && ctx.setUserProfile) {
-        ctx.setUserProfile({ ...updatedProfile, tags: formatTags(updatedProfile.tags) });
+        ctx.setUserProfile({ ...updatedProfile, tags: formatTags(tagsToSend) });
       }
-      setTags(formatTags(updatedProfile.tags));
-
+      setTags(formatTags(tagsToSend));
       onSaveSuccess?.();
       onClose();
     } catch (error: any) {

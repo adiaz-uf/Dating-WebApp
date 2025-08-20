@@ -57,6 +57,37 @@ def add_or_update_tag(user_id, tag_name, index):
     finally:
         cur.close()
         conn.close()
+
+# POST
+def replace_all_tags(user_id, tags):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # delete all tags
+        cur.execute("DELETE FROM user_tags WHERE user_id = %s", (user_id,))
+        # Insert new tags
+        for idx, tag_name in enumerate(tags):
+            clean_tag_name = tag_name.lstrip('#').strip().lower()
+            if not clean_tag_name:
+                continue
+    
+            cur.execute("SELECT id FROM tags WHERE name = %s", (clean_tag_name,))
+            tag = cur.fetchone()
+            if tag:
+                tag_id = tag[0]
+            else:
+                cur.execute("INSERT INTO tags (name) VALUES (%s) RETURNING id", (clean_tag_name,))
+                tag_id = cur.fetchone()[0]
+           
+            cur.execute("INSERT INTO user_tags (user_id, tag_id, index) VALUES (%s, %s, %s)", (user_id, tag_id, idx))
+        conn.commit()
+        return jsonify({"success": True, "message": "Tags replaced"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
         
 # GET
 def suggest_tags(query):
