@@ -155,6 +155,9 @@ export default function EditProfileModal({
     if (!formatted.startsWith("#")) {
       formatted = "#" + formatted.replace(/^#+/, "");
     }
+
+    if(formatted.length >= 20)
+      return;
     
     setTags((prevTags) => {
       if (index < 0 || index >= prevTags.length) return prevTags;
@@ -168,10 +171,12 @@ export default function EditProfileModal({
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
     const formattedVal = '#' + normalizedVal;
     const normalizedTags = tags.map((t, i) => i === index ? normalizedVal : t.trim().replace(/^#+/, '').toLowerCase());
+    
     if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
       setError("Empty or existing tag");
       return;
     }
+
     setTags(prevTags => {
       const newTags = [...prevTags];
       newTags[index] = formattedVal;

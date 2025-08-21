@@ -49,7 +49,7 @@ function App() {
         type: notif.type || "like",
         user: {
           name: notif.sender_name || notif.sender_id || "User",
-          avatar: notif.avatar || "https://img.heroui.chat/image/avatar?w=200&h=200&u=" + (notif.sender_id || "user")
+          avatar: notif.avatar + (notif.sender_id || "user")
         },
         sender_id: notif.sender_id,
         message: notif.content || "New notification",

@@ -158,6 +158,9 @@ export default function EditDataModal({
     if (!formatted.startsWith("#")) {
       formatted = "#" + formatted.replace(/^#+/, "");
     }
+
+    if(formatted.length >= 20)
+      return;
     
     setTags((prevTags) => {
       if (index < 0 || index >= prevTags.length) return prevTags;
@@ -177,6 +180,7 @@ export default function EditDataModal({
       setError("Empty or existing tag");
       return;
     }
+
     setTags(updatedTags);
   };
 

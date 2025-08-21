@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegEye, FaUser, FaEye } from "react-icons/fa";
 import { BiDislike } from "react-icons/bi";
 import { IoChatbubblesOutline } from "react-icons/io5";
+import { GiLovers } from "react-icons/gi";
 import MainLayout from "../layouts/MainLayout";
 import { ProfileProvider } from "../features/profile/ProfileContext";
 import { fetchUserProfile } from "../api/profile_service";
@@ -14,10 +15,11 @@ import type { UserProfile } from "../features/profile/types";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { markAllAsRead, markAsRead } from "../store/notificationsSlice";
 import { setViewedProfile } from "../api/user_service";
+import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../api/notifications_socket";
 
 interface Notification {
   id: string;
-  type: "like" | "dislike" | "view" | "message";
+  type: "like" | "dislike" | "view" | "message" | "match";
   user: {
     name: string;
     avatar: string;
@@ -81,6 +83,8 @@ function NotificationsPageInner() {
         return <div className="inline-flex mt-auto ml-auto bg-blue-500 p-2 rounded-full">{<FaRegEye color="white" />}</div>;
       case "message":
         return <div className="inline-flex mt-auto ml-auto bg-green-500 p-2 rounded-full">{<IoChatbubblesOutline color="white" />}</div>;
+      case "match":
+        return <div className="inline-flex mt-auto ml-auto bg-pink-600 p-2 rounded-full">{<GiLovers color="white" />}</div>;
       default:
         return <div className="inline-flex mt-auto ml-auto bg-muted p-2 rounded-full">{<FaUser color="white" />}</div>;
     }
@@ -89,6 +93,21 @@ function NotificationsPageInner() {
   const handleViewProfile = async (sender_id: string) => {
     try {
       await setViewedProfile({ viewed_id: sender_id });
+      const fromId = localStorage.getItem("userId");
+      if (fromId && sender_id) {
+        connectNotificationSocket(fromId);
+        onNotificationSocketRegistered(() => {
+          const socket = getNotificationSocket();
+          if (socket && socket.connected) {
+            socket.emit("send_reminder", {
+              to: sender_id,
+              from: fromId,
+              type: "view",
+              content: ` viewed your profile`,
+            });
+          }
+        });
+      }
       navigate(`/profile/${sender_id}`);
     } catch (err: any) {
       console.error("Error creating profile view:", err);

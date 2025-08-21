@@ -6,6 +6,7 @@ import Avatar from "../../components/Avatar";
 import { fetchChatMessages } from "../../api/chat_service";
 import { socket } from "../../api/sockets";
 import { isOnline } from "../../lib/ActivityUpdater";
+import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
 
 interface Message {
   id: string;
@@ -99,6 +100,21 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       user_id: userId,
       content: newMessage
     });
+
+    if (userId && chat.other_user_id) {
+      connectNotificationSocket(userId);
+      onNotificationSocketRegistered(() => {
+        const socket = getNotificationSocket();
+        if (socket && socket.connected) {
+          socket.emit("send_reminder", {
+            to: chat.other_user_id,
+            from: userId,
+            type: "message",
+            content: ` sent you a message`,
+          });
+        }
+      });
+    }
     setNewMessage("");
   };
 

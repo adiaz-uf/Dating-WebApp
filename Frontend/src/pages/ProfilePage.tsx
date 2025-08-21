@@ -82,6 +82,21 @@ export default function ProfilePage() {
       }
       // show match modal
       if (res && res.match) {
+        const fromId = localStorage.getItem("userId");
+        if (fromId && userProfile?.id) {
+          connectNotificationSocket(fromId);
+          onNotificationSocketRegistered(() => {
+            const socket = getNotificationSocket();
+            if (socket && socket.connected) {
+              socket.emit("send_reminder", {
+                to: userProfile.id,
+                from: fromId,
+                type: "match",
+                content: ` and you matched!`,
+              });
+            }
+          });
+        }
         setShowMatch(true);
         setTimeout(() => setShowMatch(false), 4000);
       }
@@ -102,6 +117,21 @@ export default function ProfilePage() {
   const handleUserDislike = async () => {
     try {
       await dislikeProfile(true);
+      const fromId = localStorage.getItem("userId");
+      if (fromId && userProfile?.id) {
+        connectNotificationSocket(fromId);
+        onNotificationSocketRegistered(() => {
+          const socket = getNotificationSocket();
+          if (socket && socket.connected) {
+            socket.emit("send_reminder", {
+              to: userProfile.id,
+              from: fromId,
+              type: "dislike",
+              content: ` disliked your profile`,
+            });
+          }
+        });
+      }
     } catch (err) {
       setError("Error on dislike");
     }

@@ -4,6 +4,7 @@ import { Button } from "../../components/Button";
 import { FaEye } from "react-icons/fa";
 import { fetchUserRecievedLikes, fetchUserRecievedViews } from "../../api/profile_service";
 import { setViewedProfile } from "../../api/user_service";
+import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
 
 interface UserLikeView {
 	id: string;
@@ -65,6 +66,21 @@ export default function ProfileInteractionsModal ({onClose}: ProfileInteractions
 	const handleViewProfile = async (user_id: any) => {
 		try {
 			await setViewedProfile({ viewed_id: user_id });
+			const fromId = localStorage.getItem("userId");
+			if (fromId && user_id) {
+				connectNotificationSocket(fromId);
+				onNotificationSocketRegistered(() => {
+					const socket = getNotificationSocket();
+					if (socket && socket.connected) {
+						socket.emit("send_reminder", {
+							to: user_id,
+							from: fromId,
+							type: "view",
+							content: ` viewed your profile`,
+						});
+					}
+				});
+			}
 			navigate(`/profile/${user_id}`)
 		} catch (err: any) {
 				console.error("Error creating profile view:", err);

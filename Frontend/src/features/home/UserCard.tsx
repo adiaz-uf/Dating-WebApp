@@ -7,6 +7,7 @@ import { Button } from "../../components/Button";
 import type { UserProfile } from "../../features/profile/types";
 import { useProfileContext } from "../../features/profile/ProfileContext";
 import { calculateAge } from "../../lib/CalculateAge";
+import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
 
 interface UserCardProps {
   user: UserProfile;
@@ -60,6 +61,21 @@ export const UserCard: React.FC<UserCardProps> = ({ user }) => {
   const handleViewProfile: HandleViewProfile = async (user: UserProfile): Promise<void> => {
     try {
       await setViewedProfile({ viewed_id: user.id });
+      const fromId = localStorage.getItem("userId");
+      if (fromId && user.id) {
+        connectNotificationSocket(fromId);
+        onNotificationSocketRegistered(() => {
+          const socket = getNotificationSocket();
+          if (socket && socket.connected) {
+            socket.emit("send_reminder", {
+              to: user.id,
+              from: fromId,
+              type: "view",
+              content: ` viewed your profile`,
+            });
+          }
+        });
+      }
       navigate(`/profile/${user.id}`)
     } catch (err: any) {
         console.error("Error creating profile view:", err);
