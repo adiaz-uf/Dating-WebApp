@@ -1,17 +1,31 @@
-import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BiLogOut } from "react-icons/bi";
 import { IconContext } from "react-icons";
 import { FaBell } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./Button";
-import { useAppSelector } from "../store/hooks";
+import { useEffect, useState } from "react";
+import { useNotificationCount } from "../context/NotificationCountContext";
+import { connectNotificationSocket } from "../api/notifications_socket";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const notifications = useAppSelector((state) => state.notifications.notifications);
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { unreadCount, incrementUnread } = useNotificationCount();
+
+  useEffect(() => {
+    // Listen for new notifications via socket
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+    const socket = connectNotificationSocket(userId);
+    const handler = (notif: any) => {
+      if (!notif.is_read) incrementUnread();
+    };
+    socket.on("receive_reminder", handler);
+    return () => {
+      socket.off("receive_reminder", handler);
+    };
+  }, [incrementUnread]);
 
   const navLinks = [
     { label: "Browse", href: "/" },

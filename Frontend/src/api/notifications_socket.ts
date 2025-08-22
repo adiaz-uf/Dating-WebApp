@@ -1,5 +1,3 @@
-
-
 import { socket } from "./sockets";
 
 let registeredUserId: string | null = null;

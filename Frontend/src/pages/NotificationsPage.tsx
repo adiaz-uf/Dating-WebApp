@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegEye, FaUser, FaEye } from "react-icons/fa";
@@ -12,23 +11,12 @@ import Avatar from "../components/Avatar";
 import { Button } from "../components/Button";
 import { Card, CardContent } from "../components/Card";
 import type { UserProfile } from "../features/profile/types";
-import { useAppSelector, useAppDispatch } from "../store/hooks";
-import { markAllAsRead, markAsRead } from "../store/notificationsSlice";
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, type NotificationApi } from "../api/notifications_service";
+import { useNotificationCount } from "../context/NotificationCountContext";
 import { setViewedProfile } from "../api/user_service";
 import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../api/notifications_socket";
 
-interface Notification {
-  id: string;
-  type: "like" | "dislike" | "view" | "message" | "match";
-  user: {
-    name: string;
-    avatar: string;
-  };
-  sender_id: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
+
 
 export default function NotificationsPageWithProfileProvider() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -57,23 +45,41 @@ export default function NotificationsPageWithProfileProvider() {
   );
 }
 
-
 function NotificationsPageInner() {
-  const notifications = useAppSelector((state) => state.notifications.notifications);
-  const dispatch = useAppDispatch();
+  const [notifications, setNotifications] = useState<NotificationApi[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { setUnreadCount } = useNotificationCount();
 
+  useEffect(() => {
+    setUnreadCount(notifications.filter((n) => !n.is_read).length);
+  }, [notifications, setUnreadCount]);
 
-
-  const handleMarkAllAsRead = () => {
-    dispatch(markAllAsRead());
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      const updated = notifications.map((n) => ({ ...n, is_read: true }));
+      setNotifications(updated);
+      setUnreadCount(0);
+    } catch (e) {
+      // Optionally show error
+    }
   };
 
-  const handleSingleRead = (id: string) => {
-    dispatch(markAsRead(id));
+  const handleSingleRead = async (id: string) => {
+    try {
+      await markNotificationAsRead(id);
+      const updated = notifications.map((n) =>
+        n.id === id ? { ...n, is_read: true } : n
+      );
+      setNotifications(updated);
+      setUnreadCount(updated.filter((n) => !n.is_read).length);
+    } catch (e) {
+      // Optionally show error
+    }
   };
 
-  const getIcon = (type: Notification["type"]) => {
+  const getIcon = (type: string) => {
     switch (type) {
       case "like":
         return <div className="inline-flex mt-auto ml-auto bg-pink-500 p-2 rounded-full ">{<FaHeart color="white" />} </div>;
@@ -89,6 +95,20 @@ function NotificationsPageInner() {
         return <div className="inline-flex mt-auto ml-auto bg-muted p-2 rounded-full">{<FaUser color="white" />}</div>;
     }
   };
+
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const data = await fetchNotifications();
+        setNotifications(data);
+      } catch (e) {
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadNotifications();
+  }, []);
 
   const handleViewProfile = async (sender_id: string) => {
     try {
@@ -112,7 +132,9 @@ function NotificationsPageInner() {
     } catch (err: any) {
       console.error("Error creating profile view:", err);
     }
-  }  
+  };
+
+  if (loading) return <div>Loading notifications...</div>;
 
   return (
     <MainLayout>
@@ -133,31 +155,31 @@ function NotificationsPageInner() {
                 key={notification.id}
                 onClick={() => handleSingleRead(notification.id)}
                 className={`flex items-start w-full md:w-100 gap-4 p-4 rounded-2xl border shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer ${
-                  notification.read
+                  notification.is_read
                     ? "bg-white border-gray-200"
                     : "bg-pink-50 border-pink-200"
                 }`}
               >
                 <div className="relative w-12 h-12">
                   <Avatar
-                    src={notification.user.avatar}
+                    src={notification.avatar || ""}
                     className={`w-12 h-12 rounded-full ring-2 ${
-                      notification.read ? "ring-gray-100" : "ring-pink-300"
+                      notification.is_read ? "ring-gray-100" : "ring-pink-300"
                     }`}
                   />
-                  {!notification.read && (
+                  {!notification.is_read && (
                     <span className="absolute bottom-0 right-0 block w-2.5 h-2.5 bg-pink-500 rounded-full ring-2 ring-white" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-foreground truncate">
-                      <span className="text-muted-foreground">{notification.message}</span>
-                    </p>
+                  <p className="text-sm text-foreground truncate">
+                      <span className="text-muted-foreground">{notification.content}</span>
+                  </p>
                   </div>
                   <div className="flex mt-2">
-                    <span className="text-xs text-muted-foreground">{notification.time}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(notification.created_at).toLocaleString()}</span>
                     {getIcon(notification.type)}
                     <Button
                       variant="outline"

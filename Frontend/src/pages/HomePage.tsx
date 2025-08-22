@@ -279,11 +279,15 @@ export default function HomePage() {
 
         {showEdit && (
           <EditDataModal
-            onClose={() => setShowEdit(false)}
+            onClose={() => {
+              setShowEdit(false);
+              window.location.reload(); // Force reload to refresh suggested users and profile
+            }}
             onSaveSuccess={() => {
               setSuccess(true);
               setError(null);
               setShowEdit(false);
+              window.location.reload(); // Also reload after successful save
               setTimeout(() => setSuccess(false), 3000);
             }}
             onSaveError={(msg) => {
@@ -297,10 +301,3 @@ export default function HomePage() {
     </ProfileProvider>
   );
 }
-
-
-/*   useEffect(() => { TODO: data modal
-  if (profileData && profileData.completed_profile === false) {
-    setShowEdit(true);
-  }
-}, [profileData]); */

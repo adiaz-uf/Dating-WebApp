@@ -4,7 +4,6 @@ from .db import get_db_connection
 
 reminder_bp = Blueprint("reminder", __name__)
 
-
 def save_user_reminder(user_id, sender_id, notif_type, content=None):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -37,8 +36,8 @@ def save_user_reminder(user_id, sender_id, notif_type, content=None):
             message = f"New message from {sender_name}"
         elif notif_type == "match":
             message = f"You matched with {sender_name}"
-        elif notif_type == "unlike":
-            message = f"{sender_name} unliked you"
+        elif notif_type == "dislike":
+            message = f"{sender_name} disliked your profile"
         else:
             message = content or "New notification"
 
@@ -64,6 +63,82 @@ def save_user_reminder(user_id, sender_id, notif_type, content=None):
             "is_read": False,
             "avatar": avatar_url
         }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+def get_user_reminders(session_user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT n.id, n.type, n.sender_id, n.content, n.created_at, n.is_read,
+                   u.first_name, u.username,
+                   p.url as avatar
+            FROM notifications n
+            LEFT JOIN users u ON n.sender_id = u.id
+            LEFT JOIN pictures p ON p.user_id = u.id AND p.is_profile_picture = TRUE
+            WHERE n.user_id = %s
+            ORDER BY n.created_at DESC
+            LIMIT 20
+        """, (session_user_id,))
+
+        reminders = []
+        for row in cur.fetchall():
+            (id, notif_type, sender_id, content, created_at, is_read, first_name, username, avatar) = row
+            sender_name = first_name or username or "Someone"
+            reminders.append({
+                "id": id,
+                "type": notif_type,
+                "sender_id": sender_id,
+                "content": content,
+                "created_at": created_at.isoformat() if created_at else None,
+                "is_read": is_read,
+                "avatar": avatar,
+                "sender_name": sender_name
+            })
+
+        return jsonify({"success": True, "reminder": reminders}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+def mark_notification_as_read(user_id, notif_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE id = %s AND user_id = %s
+        """, (notif_id, user_id))
+        conn.commit()
+        return jsonify({"success": True, "message": "Notification marked as read"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+def mark_all_notifications_as_read(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE user_id = %s AND is_read = FALSE
+        """, (user_id,))
+        conn.commit()
+        return jsonify({"success": True, "message": "All notifications marked as read"}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({"success": False, "message": str(e)}), 500

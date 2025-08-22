@@ -100,7 +100,7 @@ def get_suggested_users_data(user_id):
                 LIMIT 50
             """,
             (
-                user_id, user_id, genders_to_show, user_id, user_city
+                user_id, user_id, genders_to_show, user_id,
             ))
         else:
             cur.execute(f"""
@@ -149,14 +149,13 @@ def get_suggested_users_data(user_id):
                             SELECT blocked_id FROM blocks WHERE blocker_id = %s
                     )
                 ORDER BY 
-                    (u.city = %s) DESC,
                     distance_km ASC,
                     shared_tags DESC,
                     u.fame_rating DESC
                 LIMIT 50
             """,
             (
-                user_lat, user_lat, user_lon, user_id, user_id, genders_to_show, user_id, user_city
+                user_lat, user_lat, user_lon, user_id, user_id, genders_to_show, user_id,
             ))
 
         rows = cur.fetchall()

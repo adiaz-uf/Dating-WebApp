@@ -9,7 +9,6 @@ from datetime import datetime
 from dotenv import load_dotenv # type: ignore
 import math
 
-
 load_dotenv()
 
 DB_CONFIG = {
@@ -63,37 +62,47 @@ def insert_static_tags(cur):
     cur.executemany("INSERT INTO tags (name) VALUES (%s) ON CONFLICT DO NOTHING;", [(tag,) for tag in TAGS])
 
 def insert_users_and_data(cur, count=500):
+    
     for i in range(count):
-        email = fake.unique.email()
-        username = fake.unique.user_name()
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-        password = hash_password("password123")
-        birth_date = fake.date_of_birth(minimum_age=18, maximum_age=50)
-        biography = fake.sentence(nb_words=10)
-        fame_rating = random.randint(0, 100)
-        gender = random.choice(GENDERS)
-        sexual_pref = random.choice(PREFERENCES)
-        lat, lon = random_coords()
-        city = reverse_geocode(lat, lon)
-        now = datetime.now()
+        while True:
+            email = fake.unique.email()
+            username = fake.user_name()  # not using unique here, handle manually
+            first_name = fake.first_name()
+            last_name = fake.last_name()
+            password = hash_password("password123")
+            birth_date = fake.date_of_birth(minimum_age=18, maximum_age=50)
+            biography = fake.sentence(nb_words=10)
+            fame_rating = random.randint(0, 100)
+            gender = random.choice(GENDERS)
+            sexual_pref = random.choice(PREFERENCES)
+            lat, lon = random_coords()
+            now = datetime.now()
 
-        print(f"👤 {i+1}/{count} → {first_name} in {city or 'Unknown'}")
-
-        cur.execute("""
-            INSERT INTO users (
-                email, username, first_name, last_name, password, birth_date,
-                biography, fame_rating, gender, sexual_preferences,
-                latitude, longitude, city, location_last_updated,
-                completed_profile, active_account, oauth
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,true,true,false)
-            RETURNING id;
-        """, (
-            email, username, first_name, last_name, password, birth_date,
-            biography, fame_rating, gender, sexual_pref,
-            lat, lon, city, now,
-        ))
-        user_id = cur.fetchone()[0]
+            try:
+                print(f"👤 {i+1}/{count} → {first_name} ({username})")
+                cur.execute("""
+                    INSERT INTO users (
+                        email, username, first_name, last_name, password, birth_date,
+                        biography, fame_rating, gender, sexual_preferences,
+                        latitude, longitude, location_last_updated,
+                        completed_profile, active_account, oauth
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,true,true,false)
+                    RETURNING id;
+                """, (
+                    email, username, first_name, last_name, password, birth_date,
+                    biography, fame_rating, gender, sexual_pref,
+                    lat, lon, now,
+                ))
+                user_id = cur.fetchone()[0]
+                break  # success, exit retry loop
+            except psycopg2.errors.UniqueViolation as e:
+                print(f"⚠️ Username/email duplicate, retrying...")
+                cur.connection.rollback()
+                continue
+            except Exception as e:
+                print(f"❌ Error inserting user: {e}")
+                cur.connection.rollback()
+                continue
 
         img_id = random.randint(1, 70)
         image_url = f"https://i.pravatar.cc/300?img={img_id}"
