@@ -93,4 +93,15 @@ export async function resetPass(data: {
   return response.json();
 }
 
+export async function logoutUser() {
+  const response = await fetch(`${API_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Logout failed");
+  }
+  return response.json();
+}
 

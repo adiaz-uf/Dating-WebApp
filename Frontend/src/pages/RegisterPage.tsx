@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import zxcvbn from "zxcvbn";
 
-
 import AuthLayout from "../layouts/AuthLayout";
 import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";

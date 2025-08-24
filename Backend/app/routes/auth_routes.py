@@ -58,3 +58,10 @@ def reset_password_confirm_route():
     success, message = reset_password_confirm(password, token)
     return jsonify({"success": success, "message": message}), 200 if success else 400
 
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    resp = jsonify({"success": True, "message": "Logged out"})
+    resp.set_cookie("session", "", expires=0)
+    return resp, 200
+

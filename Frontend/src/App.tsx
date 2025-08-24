@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { NotificationCountProvider } from "./context/NotificationCountContext";
 import { useEffect } from 'react';
-import { useAppDispatch } from './store/hooks';
+
 import './App.css'
+import { logoutUser } from "./api/auth_service";
+import { NotificationCountProvider } from "./context/NotificationCountContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
@@ -18,24 +19,22 @@ import ProtectedRoute from "./lib/ProtectedRoute";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
 function Logout() {
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const handleLogout = async () => {
-            localStorage.clear(); // Clear localStorage
-            navigate('/login'); // Redirect to login after logout
-        };
-
-        handleLogout();
-    }, [navigate]);
-
-    return <p>Logging out...</p>;
+  const navigate = useNavigate();
+  useEffect(() => {
+    const doLogout = async () => {
+      try {
+        await logoutUser();
+      } catch {}
+      localStorage.clear();
+      navigate('/login');
+    };
+    doLogout();
+  }, [navigate]);
+  return <p>Logging out...</p>;
 }
 
 
-
 function App() {
-  const dispatch = useAppDispatch();
   const isLoggedIn = !!localStorage.getItem("userId");
   // NotificationCountProvider wraps the whole app
   return (
