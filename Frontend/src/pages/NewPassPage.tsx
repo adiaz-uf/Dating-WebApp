@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation  } from "react-router-dom";
+import zxcvbn from "zxcvbn";
+
 import AuthLayout from "../layouts/AuthLayout";
 import { Card, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
@@ -22,10 +24,29 @@ export default function NewPassPage() {
   const params = new URLSearchParams(location.search);
   const token = params.get("token");
 
-  function validatePassword(pw: string): boolean {
-    const regex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    return regex.test(pw);
+  function validatePassword(pw: string): { valid: boolean; message?: string } {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!regex.test(pw)) {
+      return {
+        valid: false,
+        message:
+          "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
+      };
+    }
+
+    const strength = zxcvbn(pw);
+
+    if (strength.score < 2) {
+      // score goes from 0 (soft) → 4 (strong)
+      return {
+        valid: false,
+        message:
+          strength.feedback.warning ||
+          "Password is too weak or contains common words. Try something less predictable.",
+      };
+    }
+
+    return { valid: true };
   }
 
 
@@ -45,14 +66,13 @@ export default function NewPassPage() {
     }
 
     /* Password validation - TODO: Commented while developing */
-    /* if (!validatePassword(password)) {
-      setError(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
-      );
+    const passwordCheck = validatePassword(new_password);
+    if (!passwordCheck.valid) {
+      setError(passwordCheck.message || "Weak password");
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
-    } */
+    }
 
     try {
       await resetPass({
