@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Filter } from "bad-words";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
@@ -94,11 +95,14 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
     const userId = localStorage.getItem("userId");
+    // Filter messagee using bad-words
+    const filter = new Filter();
+    const cleanMessage = filter.clean(newMessage);
     // send message
     socket.emit("send_message", {
       chat_id: chat.id,
       user_id: userId,
-      content: newMessage
+      content: cleanMessage
     });
 
     if (userId && chat.other_user_id) {
