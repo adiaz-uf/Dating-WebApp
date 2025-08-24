@@ -33,30 +33,6 @@ def random_coords():
     lon = round(random.uniform(-9.5, 3.3), 6)
     return lat, lon
 
-def reverse_geocode(lat, lon):
-    return None
-    try:
-        url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=10"
-        headers = {"User-Agent": "YourAppName/1.0 (your@email.com)"}
-        response = requests.get(url, headers=headers, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        address = data.get("address", {})
-
-        city = (
-            address.get("city") or
-            address.get("town") or
-            address.get("village") or
-            address.get("municipality") or
-            address.get("county") or
-            address.get("state") or
-            address.get("region") or
-            address.get("country")
-        )
-        return city
-    except Exception as e:
-        print(f"🌍 Geocoding failed: {e}")
-        return None
 
 def insert_static_tags(cur):
     cur.executemany("INSERT INTO tags (name) VALUES (%s) ON CONFLICT DO NOTHING;", [(tag,) for tag in TAGS])
@@ -66,7 +42,7 @@ def insert_users_and_data(cur, count=500):
     for i in range(count):
         while True:
             email = fake.unique.email()
-            username = fake.user_name()  # not using unique here, handle manually
+            username = fake.user_name()
             first_name = fake.first_name()
             last_name = fake.last_name()
             password = hash_password("password123")
@@ -120,7 +96,6 @@ def insert_users_and_data(cur, count=500):
                 ON CONFLICT DO NOTHING;
             """, (user_id, tag, idx))
 
-        #time.sleep(1)  # 1 request per second to avoid Nominatim blocks
 
 def main():
     try:

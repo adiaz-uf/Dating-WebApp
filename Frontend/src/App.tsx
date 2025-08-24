@@ -12,6 +12,7 @@ import NewPassPage from "./pages/NewPassPage";
 import ProfileRouteWrapper from "./features/profile/ProfileRouteWrapper";
 import NotificationsPage from "./pages/NotificationsPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import NotFoundPage from "./pages/404Page";
 import ActivityUpdater from "./lib/ActivityUpdater";
 import ProtectedRoute from "./lib/ProtectedRoute";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
@@ -49,6 +50,7 @@ function App() {
           <Route path="/new-pass" element={<NewPassPage />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+          <Route path="*" element={<NotFoundPage />} />
 
           {/* OAuth callback route */}
           <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
