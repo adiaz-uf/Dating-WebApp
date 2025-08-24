@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { ProfileProvider } from "../features/profile/ProfileContext";
 import type { UserProfile } from "../features/profile/types";
@@ -7,13 +7,13 @@ import EditDataModal from "../features/home/EditDataModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageBox } from "../components/MessageBox";
 import { getApproxLocationByIP } from "../lib/LocationByIp";
-import { Input } from "../components/Input";
-import { Button } from "../components/Button";
-import { Slider } from "../features/home/Slider";
-import { Select } from "../features/home/Select";
+import { FiltersPanel } from "../features/home/FiltersPanel";
+import { AdvancedSearchPanel } from "../features/home/AdvancedSearchPanel";
 import { UserCard } from "../features/home/UserCard";
 import { fetchSuggestedUsers } from "../api/user_service";
 import { connectNotificationSocket } from "../api/notifications_socket";
+import { calculateAge } from "../lib/CalculateAge";
+import { calculateDistance } from "../lib/CalculateDistance";
 
 export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false);
@@ -22,7 +22,7 @@ export default function HomePage() {
   const [profileData, setProfileData] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [suggestedUsers, setSuggestedUsers] = useState<UserProfile[]>([]);
-  const [filters, setFilters] = useState({
+  const defaultFilters = {
     ageRange: [18, 99],
     fameRating: [0, 100],
     location: "",
@@ -34,6 +34,19 @@ export default function HomePage() {
     specificFame: "",
     specificLocation: "",
     specificTag: ""
+  };
+  const [filters, setFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem("homepageFilters");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.ageRange && !Array.isArray(parsed.ageRange)) parsed.ageRange = [18, 99];
+        if (parsed.fameRating && !Array.isArray(parsed.fameRating)) parsed.fameRating = [0, 100];
+        if (parsed.tags && typeof parsed.tags === "string") parsed.tags = parsed.tags.split(",").map((t: string) => t.trim());
+        return { ...defaultFilters, ...parsed };
+      }
+    } catch {}
+    return defaultFilters;
   });
 
   const navigate = useNavigate();
@@ -74,7 +87,7 @@ export default function HomePage() {
     fetchProfile();
   }, []);
 
-  // Connect reminder socket
+  // Connect notification socket
   useEffect(() => {
     if (profileData) {
       connectNotificationSocket(profileData.id);
@@ -82,11 +95,9 @@ export default function HomePage() {
   }, [profileData]);
 
   // Geolocator by browser or by IP
-  // Only run this effect when profileData is loaded (not undefined)
   useEffect(() => {
-    if (!profileData) return; // Wait for profileData to be loaded from backend
+    if (!profileData) return; 
 
-    // Only try to update if latitude or longitude are null or undefined
     const lat = profileData.latitude;
     const lon = profileData.longitude;
     if (lat === null || lat === undefined || lon === null || lon === undefined) {
@@ -135,12 +146,80 @@ export default function HomePage() {
   }, [profileData]);
 
 
+  type FiltersType = typeof defaultFilters;
   const handleInputChange = (field: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setFilters((prev: FiltersType) => {
+      const updated = { ...prev, [field]: value };
+      localStorage.setItem("homepageFilters", JSON.stringify(updated));
+      return updated;
+    });
   };
 
+  const filteredAndSortedUsers = useMemo(() => {
+    if (!suggestedUsers) return [];
+    let users = [...suggestedUsers];
+    // filterBy
+    const { filterBy } = filters;
+    const filterValue = filters[filterBy];
+    if (filterValue && filterValue !== "") {
+      users = users.filter((user) => {
+        switch (filterBy) {
+          case "age":
+            if (!user.birth_date) return false;
+            return calculateAge(user.birth_date) === Number(filterValue);
+          case "location": {
+            // distance in km
+            if (!profileData || profileData.latitude == null || profileData.longitude == null || user.latitude == null || user.longitude == null) return false;
+            const dist = calculateDistance(
+              Number(profileData.latitude),
+              Number(profileData.longitude),
+              Number(user.latitude),
+              Number(user.longitude)
+            );
+            return Math.round(dist) === Number(filterValue);
+          }
+          case "fame_rating":
+            return (user.fame_rating || 0) === Number(filterValue);
+          case "tag":
+            return (user.tags || []).some((tag: string) => tag.toLowerCase().includes(String(filterValue).toLowerCase()));
+          default:
+            return true;
+        }
+      });
+    }
+    // sortBy
+    const { sortBy, sortOrder } = filters;
+    users.sort((a, b) => {
+      let valA, valB;
+      switch (sortBy) {
+        case "age":
+          valA = calculateAge(a.birth_date);
+          valB = calculateAge(b.birth_date);
+          break;
+        case "location":
+          valA = a.city?.toLowerCase() || "";
+          valB = b.city?.toLowerCase() || "";
+          break;
+        case "fame_rating":
+          valA = a.fame_rating || 0;
+          valB = b.fame_rating || 0;
+          break;
+        case "tags":
+          valA = (a.tags?.length || 0);
+          valB = (b.tags?.length || 0);
+          break;
+        default:
+          valA = 0;
+          valB = 0;
+      }
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+    return users;
+  }, [suggestedUsers, filters]);
+
   const handleSearch = async () => {
-    // TODO: Fetch filtered and sorted users from backend based on filters
   };
 
   const handleAdvancedSearch = async () => {
@@ -160,119 +239,23 @@ export default function HomePage() {
 
         <div className="w-full grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 place-items-center gap-5 px-4 bg-pink-50">
           {/* Filters Panel */}
-          <div className="w-full max-w-6xl bg-white shadow-md rounded-3xl p-6 mb-6">
-            <div className="flex items-center flex-col justify-center flex-wrap gap-4">
-              <h2 className="text-2xl font-bold text-gray-800">Search Profiles</h2>
-              <div className="flex flex-col sm:flex-row gap-2 items-center justify-center flex-wrap">
-                <div className="flex flex-col">
-                <Select
-                  label="Sort By"
-                  value={filters.sortBy}
-                  options={[
-                    { label: "Age", value: "age" },
-                    { label: "Location", value: "location" },
-                    { label: "Fame Rating", value: "fame_rating" },
-                    { label: "Tags", value: "tags" },
-                  ]}
-                  onChange={(val) => handleInputChange("sortBy", val)}
-                />
-                <Select
-                  label="Order"
-                  value={filters.sortOrder}
-                  options={[
-                    { label: "Ascending", value: "asc" },
-                    { label: "Descending", value: "desc" },
-                  ]}
-                  onChange={(val) => handleInputChange("sortOrder", val)}
-                />
-                </div>
-                <div className="sm:m-4 m-2">
-                  <p className="text-lg">or</p>
-                </div>
-                <div className="flex flex-col items-center">
-                <Select
-                  label="Filter By"
-                  value={filters.filterBy}
-                  options={[
-                    { label: "Age", value: "age" },
-                    { label: "Location", value: "location" },
-                    { label: "Fame Rating", value: "fame_rating" },
-                    { label: "Tag", value: "tag" },
-                  ]}
-                  onChange={(val) => handleInputChange("filterBy", val)}
-                />
-                <div>
-                  <label className="block text-md font-medium text-gray-700 mb-1">Type an specific: {filters.filterBy}</label>
-                  <Input
-                    value={filters.location}
-                    onChange={(e) => handleInputChange(filters.filterBy, e.target.value)}
-                    className=" ml-2 mb-2"
-                  />
-                </div>
-                </div>
-              </div>
-            </div>
-            <Button onClick={handleSearch}>Search</Button>
-          </div>
+          <FiltersPanel
+            filters={filters}
+            onInputChange={handleInputChange}
+            onSearch={handleSearch}
+          />
 
           {/* Advanced Search Panel */}
-          <div className="w-full max-w-6xl bg-white shadow-md rounded-3xl p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Advanced search</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Age slider */}
-              <div>
-                <Slider
-                  label="Min Age"
-                  min={18}
-                  max={filters.ageRange[1]}
-                  value={filters.ageRange[0]}
-                  onChange={(val) => handleInputChange("ageRange", [val, filters.ageRange[1]])}
-                />
-                <Slider
-                  label="Max Age"
-                  min={filters.ageRange[0]}
-                  max={99}
-                  value={filters.ageRange[1]}
-                  onChange={(val) => handleInputChange("ageRange", [filters.ageRange[0], val])}
-                />
-              </div>
-              {/* Fame slider */}
-              <div>
-                <Slider
-                  label="Min Fame"
-                  min={0}
-                  max={filters.fameRating[1]}
-                  value={filters.fameRating[0]}
-                  onChange={(val) => handleInputChange("fameRating", [val, filters.fameRating[1]])}
-                />
-                <Slider
-                  label="Max Fame"
-                  min={filters.fameRating[0]}
-                  max={100}
-                  value={filters.fameRating[1]}
-                  onChange={(val) => handleInputChange("fameRating", [filters.fameRating[0], val])}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location Contains</label>
-                <Input
-                  value={filters.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
-                />
-                <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Tags (comma separated)</label>
-                <Input
-                  value={filters.tags.join(", ")}
-                  onChange={(e) => handleInputChange("tags", e.target.value.split(",").map(t => t.trim()))}
-                />
-              </div>
-            </div>
-            <Button className="mt-8" onClick={handleAdvancedSearch}>Advanced Search</Button>
-          </div>
+          <AdvancedSearchPanel
+            filters={filters}
+            onInputChange={handleInputChange}
+            onAdvancedSearch={handleAdvancedSearch}
+          />
 
         </div>
           {/* Suggested or Searched Profiles */}
           <div className='w-full gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 px-4'>
-            {suggestedUsers.map((user) => (
+            {filteredAndSortedUsers.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}
           </div>

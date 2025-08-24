@@ -8,6 +8,7 @@ import type { UserProfile } from "../../features/profile/types";
 import { useProfileContext } from "../../features/profile/ProfileContext";
 import { calculateAge } from "../../lib/CalculateAge";
 import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
+import { calculateDistance } from "../../lib/CalculateDistance";
 
 interface UserCardProps {
   user: UserProfile;
@@ -15,19 +16,6 @@ interface UserCardProps {
 
 interface HandleViewProfile {
   (user: UserProfile): void;
-}
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // km
-  const toRad = (deg: number) => deg * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const p1 = toRad(lat1);
-  const p2 = toRad(lat2);
-
-  const a = Math.sin(dLat/2)**2 +
-            Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // distance in km
 }
 
 export const UserCard: React.FC<UserCardProps> = ({ user }) => {
@@ -52,7 +40,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user }) => {
       const lLat = typeof loggedUser.latitude === 'string' ? parseFloat(loggedUser.latitude) : loggedUser.latitude;
       const lLon = typeof loggedUser.longitude === 'string' ? parseFloat(loggedUser.longitude) : loggedUser.longitude;
       if ([uLat, uLon, lLat, lLon].every(v => typeof v === 'number' && !isNaN(v))) {
-        return haversine(lLat, lLon, uLat, uLon);
+        return calculateDistance(lLat, lLon, uLat, uLon);
       }
     }
     return null;
@@ -101,7 +89,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user }) => {
           </Button>
         </div>
         <p className="text-sm text-gray-900">
-          {age} · {(distance !== null ? `${distance.toFixed(1)} km` : "Secret Location")}
+          {age} · {(distance !== null ? `${distance.toFixed(0)} km` : "Secret Location")}
         </p>
         <p className="text-sm text-gray-700 line-clamp-2">{user.biography}</p>
         <div className="flex flex-wrap gap-1 justify-center mt-3">
