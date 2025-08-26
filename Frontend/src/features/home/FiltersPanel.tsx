@@ -55,8 +55,31 @@ export const FiltersPanel: React.FC<FiltersPanelProps> = ({ filters, onInputChan
             <div>
               <label className="block text-md font-medium text-gray-700 mb-1">Type an specific: {filters.filterBy}</label>
             <Input
-                value={filters[filters.filterBy] ?? ""}
-                onChange={e => onInputChange(filters.filterBy, e.target.value)}
+                value={(() => {
+                  switch (filters.filterBy) {
+                    case "age": return filters.specificAge;
+                    case "location": return filters.specificLocation;
+                    case "fame_rating": return filters.specificFame;
+                    case "tag": return filters.specificTag;
+                    default: return "";
+                  }
+                })()}
+                onChange={e => {
+                  switch (filters.filterBy) {
+                    case "age": 
+                      onInputChange("specificAge", e.target.value);
+                      break;
+                    case "location": 
+                      onInputChange("specificLocation", e.target.value);
+                      break;
+                    case "fame_rating": 
+                      onInputChange("specificFame", e.target.value);
+                      break;
+                    case "tag": 
+                      onInputChange("specificTag", e.target.value);
+                      break;
+                  }
+                }}
                 className="ml-2 mb-2"
                 placeholder={`Enter ${filters.filterBy}`}
               />

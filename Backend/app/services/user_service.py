@@ -3,6 +3,151 @@ from .db import get_db_connection
 
 users_bp = Blueprint("users", __name__)
 
+def advanced_search_users(user_id, filters):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Get logged-in user coordinates
+        cur.execute("SELECT latitude, longitude FROM users WHERE id = %s", (user_id,))
+        user_row = cur.fetchone()
+        user_lat, user_lon = user_row if user_row else (None, None)
+  
+        conditions = [
+            "u.id != %s",           
+            "u.active_account = TRUE",
+            "u.completed_profile = TRUE"
+        ]
+
+        # --- Filters ---
+        # Age
+        age_min, age_max = filters.get("ageRange", [18, 99])
+        if age_min is not None and age_max is not None:
+            conditions.append("EXTRACT(YEAR FROM AGE(u.birth_date)) BETWEEN %s AND %s")
+
+        # Fame
+        fame_min, fame_max = filters.get("fameRating", [0, 100])
+        if fame_min is not None and fame_max is not None:
+            conditions.append("u.fame_rating BETWEEN %s AND %s")
+
+        # Distance filter
+        location = filters.get("location")
+        select_distance = ''
+        if location and user_lat is not None and user_lon is not None:
+            try:
+                max_distance = float(location)
+                # Add distance column
+                select_distance = """,
+                    (6371 * acos(least(1,
+                        cos(radians(%s)) * cos(radians(u.latitude)) *
+                        cos(radians(u.longitude) - radians(%s)) +
+                        sin(radians(%s)) * sin(radians(u.latitude))
+                    ))) AS distance_km
+                """
+                # WHERE distance
+                conditions.append("""(
+                    6371 * acos(least(1,
+                        cos(radians(%s)) * cos(radians(u.latitude)) *
+                        cos(radians(u.longitude) - radians(%s)) +
+                        sin(radians(%s)) * sin(radians(u.latitude))
+                    ))
+                ) <= %s""")
+                distance_params = [user_lat, user_lon, user_lat, user_lat, user_lon, user_lat, max_distance]
+            except ValueError:
+                distance_params = []
+        else:
+            distance_params = []
+       
+        # Tags
+        tags = filters.get("tags", [])
+        tag_params = []
+        if tags and isinstance(tags, list) and tags[0]:
+            tag_placeholders = ','.join(['%s'] * len(tags))
+            conditions.append(f"""u.id IN (
+                SELECT ut.user_id
+                FROM user_tags ut
+                JOIN tags t ON ut.tag_id = t.id
+                WHERE LOWER(t.name) IN ({tag_placeholders})
+            )""")
+            tag_params = [t.lower() for t in tags if t]
+
+        # --- Build SQL ---
+        sql = f"""
+            SELECT 
+                u.id,
+                u.username,
+                u.city,
+                u.first_name,
+                u.birth_date,
+                u.latitude,
+                u.longitude,
+                u.biography,
+                u.fame_rating,
+                (
+                    SELECT url 
+                    FROM pictures 
+                    WHERE user_id = u.id AND is_profile_picture = TRUE 
+                    ORDER BY uploaded_at DESC 
+                    LIMIT 1
+                ) AS main_img,
+                ARRAY(
+                    SELECT t.name
+                    FROM user_tags ut
+                    JOIN tags t ON ut.tag_id = t.id
+                    WHERE ut.user_id = u.id
+                    ORDER BY ut.index
+                ) AS tags
+                {select_distance}
+            FROM users u
+            WHERE {' AND '.join(conditions)}
+        """
+  
+        # Sorting
+        sort_by = filters.get("sortBy", "location")
+        sort_order = filters.get("sortOrder", "asc")
+        order_map = {
+            "age": "u.birth_date",
+            "location": "distance_km" if location else "u.city",
+            "fame_rating": "u.fame_rating",
+            "tags": """array_length(
+                ARRAY(SELECT t.name FROM user_tags ut JOIN tags t ON ut.tag_id = t.id WHERE ut.user_id = u.id),
+                1
+            )"""
+        }
+        order_field = order_map.get(sort_by, "u.city")
+        sql += f" ORDER BY {order_field} {'ASC' if sort_order == 'asc' else 'DESC'} LIMIT 50"
+    
+        # --- Params ---
+        params = []
+        # First: distance params for SELECT clause (if exists)
+        if distance_params:
+            params.extend(distance_params[:3])
+        
+        # Second: WHERE clause params in order
+        params.append(user_id)               
+        if age_min is not None and age_max is not None:
+            params.extend([age_min, age_max])   # age
+        if fame_min is not None and fame_max is not None:
+            params.extend([fame_min, fame_max]) # fame
+        if distance_params:
+            params.extend(distance_params[3:])  # distance
+        if tag_params:
+            params.extend(tag_params)           # tags
+        
+        # Execute
+        cur.execute(sql, tuple(params))
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        users = [dict(zip(columns, row)) for row in rows]
+        return jsonify({"success": True, "users": users}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+
 # GET suggested users based on location, tags, sexuality, etc
 def get_suggested_users_data(user_id):
     """

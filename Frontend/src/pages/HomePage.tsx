@@ -10,7 +10,7 @@ import { getApproxLocationByIP } from "../lib/LocationByIp";
 import { FiltersPanel } from "../features/home/FiltersPanel";
 import { AdvancedSearchPanel } from "../features/home/AdvancedSearchPanel";
 import { UserCard } from "../features/home/UserCard";
-import { fetchSuggestedUsers } from "../api/user_service";
+import { fetchSuggestedUsers, fetchAdvancedUsers } from "../api/user_service";
 import { connectNotificationSocket } from "../api/notifications_socket";
 import { calculateAge } from "../lib/CalculateAge";
 import { calculateDistance } from "../lib/CalculateDistance";
@@ -49,17 +49,22 @@ export default function HomePage() {
     return defaultFilters;
   });
 
+  const [advancedFilters, setAdvancedFilters] = useState(() => ({
+    ageRange: [18, 99],
+    fameRating: [0, 100],
+    location: "",
+    tags: [] as string[],
+  }));
+
   const navigate = useNavigate();
   const location = useLocation();
 
   // Detect OAuth login redirect and store userId in localStorage if present
   useEffect(() => {
-    // Handle confirmMsg from navigation state
     if (location.state && location.state.confirmMsg) {
       window.history.replaceState({}, document.title);
     }
 
-    // Check for userId in query params
     const params = new URLSearchParams(window.location.search);
     const userId = params.get("userId");
     if (userId) {
@@ -160,7 +165,26 @@ export default function HomePage() {
     let users = [...suggestedUsers];
     // filterBy
     const { filterBy } = filters;
-    const filterValue = filters[filterBy];
+    
+    // Get the correct filter value based on filterBy
+    let filterValue;
+    switch (filterBy) {
+      case "age":
+        filterValue = filters.specificAge;
+        break;
+      case "location":
+        filterValue = filters.specificLocation;
+        break;
+      case "fame_rating":
+        filterValue = filters.specificFame;
+        break;
+      case "tag":
+        filterValue = filters.specificTag;
+        break;
+      default:
+        filterValue = "";
+    }
+    
     if (filterValue && filterValue !== "") {
       users = users.filter((user) => {
         switch (filterBy) {
@@ -197,8 +221,26 @@ export default function HomePage() {
           valB = calculateAge(b.birth_date);
           break;
         case "location":
-          valA = a.city?.toLowerCase() || "";
-          valB = b.city?.toLowerCase() || "";
+          // Calculate actual distance for sorting
+          if (!profileData || profileData.latitude == null || profileData.longitude == null || 
+              a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) {
+            // Fallback to city name comparison if coordinates are missing
+            valA = a.city?.toLowerCase() || "";
+            valB = b.city?.toLowerCase() || "";
+          } else {
+            valA = calculateDistance(
+              Number(profileData.latitude),
+              Number(profileData.longitude),
+              Number(a.latitude),
+              Number(a.longitude)
+            );
+            valB = calculateDistance(
+              Number(profileData.latitude),
+              Number(profileData.longitude),
+              Number(b.latitude),
+              Number(b.longitude)
+            );
+          }
           break;
         case "fame_rating":
           valA = a.fame_rating || 0;
@@ -223,7 +265,19 @@ export default function HomePage() {
   };
 
   const handleAdvancedSearch = async () => {
-    // TODO: Fetch filtered and sorted users from backend based on filters
+    try {
+      setLoading(true);
+      const data = await fetchAdvancedUsers(advancedFilters);
+      if (data.success) {
+        setSuggestedUsers(data.users);
+      } else {
+        setError(data.message || "No users found");
+      }
+    } catch (err: any) {
+      setError(err.message || "Error in advanced search");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) return <div>Loading profile...</div>;
@@ -247,8 +301,8 @@ export default function HomePage() {
 
           {/* Advanced Search Panel */}
           <AdvancedSearchPanel
-            filters={filters}
-            onInputChange={handleInputChange}
+            filters={advancedFilters}
+            onInputChange={(field, value) => setAdvancedFilters((prev) => ({ ...prev, [field]: value }))}
             onAdvancedSearch={handleAdvancedSearch}
           />
 

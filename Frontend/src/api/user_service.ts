@@ -15,6 +15,22 @@ export async function fetchSuggestedUsers() {
   return response.json(); // returns { success: true, users: [...] }
 }
 
+// advanced search
+export async function fetchAdvancedUsers(filters: any) {
+  const url = `${API_URL}/users/advanced-search`;
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(filters)
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Advanced search failed");
+  }
+  return response.json();
+}
+
 export async function setViewedProfile(data: {
   viewed_id: string;
 }) {

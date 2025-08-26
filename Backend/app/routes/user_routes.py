@@ -11,6 +11,15 @@ def get_suggested_users():
         return jsonify({"success": False, "message": "Not authenticated"}), 401
     return get_suggested_users_data(session_user_id)
 
+@users_bp.route("/advanced-search", methods=["POST"])
+def advanced_search():
+    session_user_id = session.get("user_id")
+    if not session_user_id:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+    data = request.get_json() or {}
+    from app.services.user_service import advanced_search_users
+    return advanced_search_users(session_user_id, data)
+
 @users_bp.route("/profile-viewed", methods=["POST", "OPTIONS"])
 def set_viewed_profile():
     if request.method == "OPTIONS":
