@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Filter } from "bad-words";
 import { useNavigate } from "react-router-dom";
+import { MdEvent } from "react-icons/md";
+
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import Avatar from "../../components/Avatar";
@@ -8,6 +10,7 @@ import { fetchChatMessages } from "../../api/chat_service";
 import { socket } from "../../api/sockets";
 import { isOnline } from "../../lib/ActivityUpdater";
 import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
+import { CreateEventModal } from "./CreateEventModal";
 
 interface Message {
   id: string;
@@ -39,6 +42,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showCreateEvent, setShowCreateEvent] = useState(true);
 
 
   // fetch old messages
@@ -122,7 +126,9 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
     setNewMessage("");
   };
 
-  const handleUpload = () => {}
+  const handleUpload = () => {
+    setShowCreateEvent(true);
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -190,10 +196,17 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       
       {/* Message input */}
       <div className="p-3 px-5 border-t border-divider shadow-md border-pink-200 mt-auto">
-        <div className="flex items-end gap-2">
-          <Button onClick={handleUpload}>
-            +
+        <div className="group flex items-end gap-2">
+          {
+            showCreateEvent &&
+            <CreateEventModal></CreateEventModal>
+          }
+          <Button onClick={handleUpload} variant="outline" className="py-1 mb-0.5 text-2xl">
+            <MdEvent/>
           </Button>
+          <span className="fixed -translate-y-5/3 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            Schedule event
+          </span>
           <Input
             type="message"
             placeholder="Type a message..."
@@ -201,7 +214,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
             onChange={e => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <Button onClick={handleSendMessage}>
+          <Button onClick={handleSendMessage} className="mb-0.5">
             send
           </Button>
         </div>
