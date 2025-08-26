@@ -10,6 +10,8 @@ interface AdvancedSearchPanelProps {
 }
 
 export const AdvancedSearchPanel: React.FC<AdvancedSearchPanelProps> = ({ filters, onInputChange, onAdvancedSearch }) => {
+  const [tagInput, setTagInput] = React.useState("");
+
   const handleDistanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.trim();
     if (val === "") {
@@ -24,13 +26,37 @@ export const AdvancedSearchPanel: React.FC<AdvancedSearchPanelProps> = ({ filter
     }
   };
 
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (val.trim() === "") {
-      onInputChange("tags", []);
-    } else {
-      onInputChange("tags", val.split(",").map((t: string) => t.trim()).filter(Boolean));
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTagInput(e.target.value);
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTags();
     }
+  };
+
+  const addTags = () => {
+    if (tagInput.trim()) {
+      const newTags = tagInput
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag && !filters.tags.includes(tag));
+      
+      if (newTags.length > 0) {
+        onInputChange("tags", [...filters.tags, ...newTags]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    onInputChange("tags", filters.tags.filter((tag: string) => tag !== tagToRemove));
+  };
+
+  const clearAllTags = () => {
+    onInputChange("tags", []);
   };
 
   return (
@@ -71,6 +97,7 @@ export const AdvancedSearchPanel: React.FC<AdvancedSearchPanelProps> = ({ filter
             onChange={(val) => onInputChange("fameRating", [filters.fameRating[0], val])}
           />
         </div>
+        {/* Distance input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Distance (km)</label>
           <Input
@@ -80,14 +107,45 @@ export const AdvancedSearchPanel: React.FC<AdvancedSearchPanelProps> = ({ filter
             type="number"
             min={0}
           />
-      
-          <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Tags</label>
-          <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">(comma separated)</label>
-          <Input
-            value={filters.tags.join(", ")}
-            placeholder="e.g. pets"
-            onChange={handleTagsChange}
-          />
+          {/* Tags input */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {filters.tags.map((tag: string) => (
+                <span 
+                  key={tag} 
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-pink-100 text-pink-800"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="ml-2 text-pink-600 hover:text-pink-800 focus:outline-none"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {filters.tags.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllTags}
+                  className="text-xs text-red-600 hover:text-red-800 underline"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+            <Input
+              value={tagInput}
+              onChange={handleTagInputChange}
+              onKeyDown={handleTagInputKeyDown}
+              placeholder="Type tags and press Enter or comma"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Press Enter or comma to add tags
+            </p>
+          </div>
         </div>
       </div>
       <Button className="mt-4" onClick={onAdvancedSearch}>Advanced Search</Button>
