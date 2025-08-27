@@ -73,7 +73,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // Initialize map
-    const map = window.L.map(mapRef.current).setView([centerLat, centerLng], 10);
+    const map = window.L.map(mapRef.current).setView([centerLat, centerLng], 100);
 
     // Add tile layer - Using CartoDB Positron for a clean, minimal look
     window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {

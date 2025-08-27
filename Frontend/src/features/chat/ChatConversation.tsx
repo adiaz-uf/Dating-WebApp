@@ -1,22 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Filter } from "bad-words";
 import { useNavigate } from "react-router-dom";
-import { MdEvent } from "react-icons/md";
+import { MdEvent, MdMic } from "react-icons/md";
 
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import Avatar from "../../components/Avatar";
 import { fetchChatMessages } from "../../api/chat_service";
+import { uploadAudioMessage } from "../../api/audio_service";
 import { socket } from "../../api/sockets";
 import { isOnline } from "../../lib/ActivityUpdater";
 import { connectNotificationSocket, getNotificationSocket, onNotificationSocketRegistered } from "../../api/notifications_socket";
 import { CreateEventModal } from "./CreateEventModal";
+import { AudioRecorder } from "./AudioRecorder";
 
 interface Message {
   id: string;
   text: string;
   sent: boolean;
   time: string;
+  type?: 'text' | 'audio';
+  audio_url?: string;
 }
 
 interface ChatProps {
@@ -43,6 +47,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
 
   // fetch old messages
   useEffect(() => {
@@ -54,7 +59,9 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
           id: msg.id,
           text: msg.content,
           sent: userId && msg.sender_id == userId,
-          time: msg.sent_at ? new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""
+          time: msg.sent_at ? new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+          type: msg.message_type || 'text',
+          audio_url: msg.audio_url
         }));
         setMessages(msgs);
         setLoading(false);
@@ -77,7 +84,9 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
             id: data.msg_id || Date.now().toString(),
             text: data.content,
             sent: data.user_id == localStorage.getItem("userId"),
-            time: data.sent_at ? new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""
+            time: data.sent_at ? new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+            type: data.message_type || 'text',
+            audio_url: data.audio_url
           }
         ]);
       }
@@ -105,7 +114,8 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
     socket.emit("send_message", {
       chat_id: chat.id,
       user_id: userId,
-      content: cleanMessage
+      content: cleanMessage,
+      message_type: 'text'
     });
 
     if (userId && chat.other_user_id) {
@@ -123,6 +133,45 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       });
     }
     setNewMessage("");
+  };
+
+  const handleSendAudio = async (audioBlob: Blob) => {
+    try {
+      const userId = localStorage.getItem("userId");
+      
+      // Upload audio to server
+      const result = await uploadAudioMessage(chat.id, audioBlob);
+      
+      if (result.success) {
+        // Send audio message via socket
+        socket.emit("send_message", {
+          chat_id: chat.id,
+          user_id: userId,
+          content: "🎵 Voice message",
+          message_type: 'audio',
+          audio_url: result.audio_url
+        });
+
+        // Send notification
+        if (userId && chat.other_user_id) {
+          connectNotificationSocket(userId);
+          onNotificationSocketRegistered(() => {
+            const socket = getNotificationSocket();
+            if (socket && socket.connected) {
+              socket.emit("send_reminder", {
+                to: chat.other_user_id,
+                from: userId,
+                type: "message",
+                content: ` sent you a voice message`,
+              });
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      setError('Failed to send voice message');
+    }
   };
 
   const handleUpload = () => {
@@ -152,7 +201,8 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
     socket.emit("send_message", {
       chat_id: chat.id,
       user_id: userId,
-      content: eventMessage
+      content: eventMessage,
+      message_type: 'text'
     });
 
     // Send notification to other user
@@ -231,8 +281,25 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
                     : "bg-gray-100 text-left text-black"
                 }`}
               >
-                <div className="text-sm whitespace-pre-line">{message.text}</div>
-                <div className="text-xs text-gray-500 mt-1">{message.time}</div>
+                {message.type === 'audio' ? (
+                  <div className="space-y-2">
+                    <div className="text-sm">🎵 Voice message</div>
+                    <audio 
+                      controls 
+                      className="w-full max-w-xs"
+                      style={{ height: '32px' }}
+                    >
+                      <source src={`http://localhost:5000${message.audio_url}`} type="audio/webm" />
+                      Your browser does not support audio playback.
+                    </audio>
+                    <div className="text-xs text-gray-500">{message.time}</div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-sm whitespace-pre-line">{message.text}</div>
+                    <div className="text-xs text-gray-500 mt-1">{message.time}</div>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -241,8 +308,8 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       
       {/* Message input */}
       <div className="p-3 px-5 border-t border-divider shadow-md border-pink-200 mt-auto">
-        <div className="group flex items-end gap-2">
-          <div className="relative">
+        <div className="flex items-end gap-2">
+          <div className="relative group">
             <Button onClick={handleUpload} variant="outline" className="py-1 mb-0.5 text-2xl">
               <MdEvent/>
             </Button>
@@ -255,6 +322,27 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
               <CreateEventModal
                 onClose={() => setShowCreateEvent(false)}
                 onSchedule={handleScheduleEvent}
+              />
+            )}
+          </div>
+
+          <div className="relative group">
+            <Button 
+              onClick={() => setShowAudioRecorder(true)} 
+              variant="outline" 
+              className="py-1 mb-0.5 text-2xl"
+            >
+              <MdMic/>
+            </Button>
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              Voice message
+            </span>
+            
+            {/* Audio Recorder - positioned relative to button */}
+            {showAudioRecorder && (
+              <AudioRecorder
+                onSendAudio={handleSendAudio}
+                onClose={() => setShowAudioRecorder(false)}
               />
             )}
           </div>

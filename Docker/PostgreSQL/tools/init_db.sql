@@ -89,6 +89,8 @@ CREATE TABLE messages (
     chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
     sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
+    message_type VARCHAR(20) DEFAULT 'text',
+    audio_url VARCHAR(255) DEFAULT NULL,
     sent_at TIMESTAMP DEFAULT NOW()
 );
 

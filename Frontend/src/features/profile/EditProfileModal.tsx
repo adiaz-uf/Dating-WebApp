@@ -83,7 +83,7 @@ const ResizableInput = ({
       />
       {showSuggestions && suggestions.length > 0 && (
         <div
-          className="fixed left-1/2 -translate-x-1/2 min-w-[220px] w-max max-w-[350px] bg-white border border-pink-300 rounded-2xl shadow-lg z-50 max-h-48 overflow-auto flex flex-col"
+          className="fixed left-1/2 -translate-x-1/2 min-w-[220px] w-max max-w-[350px] bg-white border border-pink-300 rounded-2xl shadow-lg z-[10000] max-h-48 overflow-auto flex flex-col"
           style={{
             boxShadow: '0 4px 24px 0 rgba(233, 30, 99, 0.10)',
             top: spanRef.current ? (spanRef.current.getBoundingClientRect().bottom + 8) + 'px' : '120px'
@@ -224,7 +224,7 @@ export default function EditProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
       <div className="bg-pink-50 rounded-3xl p-6 mx-2 w-full max-w-2xl shadow-xl overflow-y-auto scroll-hidden max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold text-pink-600">Edit Profile</h2>

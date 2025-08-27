@@ -23,6 +23,12 @@ def create_app():
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         return send_from_directory('/uploads', filename)
+    
+    # serve audio files from /chats/audio/
+    @app.route('/chats/audio/<path:filename>')
+    def audio_file(filename):
+        audio_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads', 'audio')
+        return send_from_directory(audio_folder, filename)
 
     app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
     # Enable CORS for all routes, allowing credentials (cookies, etc.)

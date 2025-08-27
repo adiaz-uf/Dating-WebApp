@@ -88,7 +88,7 @@ export default function ProfileInteractionsModal ({onClose}: ProfileInteractions
 	}
 
 	return (
-		<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+		<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
 			<div className="bg-pink-100 rounded-3xl mx-2 w-full max-w-2xl shadow-xl overflow-y-auto scroll-hidden  h-150 max-h-[90vh]">
 				<div className="flex justify-between items-center mb-4">
 					{showLikes && (
