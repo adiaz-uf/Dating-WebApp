@@ -42,8 +42,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showCreateEvent, setShowCreateEvent] = useState(true);
-
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   // fetch old messages
   useEffect(() => {
@@ -128,7 +127,53 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
 
   const handleUpload = () => {
     setShowCreateEvent(true);
-  }
+  };
+
+  const handleScheduleEvent = (eventData: { name: string; date: string; time: string }) => {
+    // Format the date and time for display in English
+    const eventDate = new Date(`${eventData.date}T${eventData.time}`);
+    const formattedDate = eventDate.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const formattedTime = eventDate.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+
+    // Create event reminder message
+    const eventMessage = `📅 Event Scheduled: "${eventData.name}"\n📍 Date: ${formattedDate}\n⏰ Time: ${formattedTime}`;
+    
+    const userId = localStorage.getItem("userId");
+    
+    // Send event as a message in the chat
+    socket.emit("send_message", {
+      chat_id: chat.id,
+      user_id: userId,
+      content: eventMessage
+    });
+
+    // Send notification to other user
+    if (userId && chat.other_user_id) {
+      connectNotificationSocket(userId);
+      onNotificationSocketRegistered(() => {
+        const socket = getNotificationSocket();
+        if (socket && socket.connected) {
+          socket.emit("send_reminder", {
+            to: chat.other_user_id,
+            from: userId,
+            type: "event",
+            content: ` scheduled an event: "${eventData.name}"`,
+          });
+        }
+      });
+    }
+
+    // Close modal after scheduling
+    setShowCreateEvent(false);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -186,7 +231,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
                     : "bg-gray-100 text-left text-black"
                 }`}
               >
-                <div className="text-sm">{message.text}</div>
+                <div className="text-sm whitespace-pre-line">{message.text}</div>
                 <div className="text-xs text-gray-500 mt-1">{message.time}</div>
               </div>
             </div>
@@ -197,16 +242,22 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
       {/* Message input */}
       <div className="p-3 px-5 border-t border-divider shadow-md border-pink-200 mt-auto">
         <div className="group flex items-end gap-2">
-          {
-            showCreateEvent &&
-            <CreateEventModal></CreateEventModal>
-          }
-          <Button onClick={handleUpload} variant="outline" className="py-1 mb-0.5 text-2xl">
-            <MdEvent/>
-          </Button>
-          <span className="fixed -translate-y-5/3 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
-            Schedule event
-          </span>
+          <div className="relative">
+            <Button onClick={handleUpload} variant="outline" className="py-1 mb-0.5 text-2xl">
+              <MdEvent/>
+            </Button>
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-pink-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              Schedule event
+            </span>
+            
+            {/* Create Event Modal - positioned relative to button */}
+            {showCreateEvent && (
+              <CreateEventModal
+                onClose={() => setShowCreateEvent(false)}
+                onSchedule={handleScheduleEvent}
+              />
+            )}
+          </div>
           <Input
             type="message"
             placeholder="Type a message..."
