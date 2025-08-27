@@ -10,6 +10,7 @@ import { getApproxLocationByIP } from "../lib/LocationByIp";
 import { FiltersPanel } from "../features/home/FiltersPanel";
 import { AdvancedSearchPanel } from "../features/home/AdvancedSearchPanel";
 import { UserCard } from "../features/home/UserCard";
+import { InteractiveMap } from "../features/home/InteractiveMap";
 import { fetchSuggestedUsers, fetchAdvancedUsers } from "../api/user_service";
 import { connectNotificationSocket } from "../api/notifications_socket";
 import { calculateAge } from "../lib/CalculateAge";
@@ -280,6 +281,10 @@ export default function HomePage() {
     }
   };
 
+  const handleUserMapClick = (user: UserProfile) => {
+    navigate(`/profile/${user.id}`);
+  };
+
   if (loading) return <div>Loading profile...</div>;
   if (!profileData) return <div>Error loading profile. Please try again later.</div>;
 
@@ -312,6 +317,15 @@ export default function HomePage() {
             {filteredAndSortedUsers.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}
+          </div>
+
+          {/* Interactive Map */}
+          <div className="w-full px-4 mt-8">
+            <InteractiveMap 
+              users={filteredAndSortedUsers}
+              currentUser={profileData}
+              onUserClick={handleUserMapClick}
+            />
           </div>
 
         {showEdit && (
