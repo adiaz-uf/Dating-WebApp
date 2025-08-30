@@ -22,7 +22,6 @@ export default function ResetPassPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  // TODO
   const handleResetPassword = async () => {
     if (!email) {
       setError("Please fill in email");
@@ -31,13 +30,12 @@ export default function ResetPassPage() {
       return;
     }
 
-    /* email validation - TODO: Commented while developing */
-    /* if (!validateEmail(email)) {
+    if (!validateEmail(email)) {
       setError("Invalid email format. Please enter a valid email address.");
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
-    } */
+    }
 
   try {
       await requestResetPass(email);

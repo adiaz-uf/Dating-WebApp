@@ -160,13 +160,17 @@ export default function ProfilePage() {
         }
       };
       const fetchChatInCommon = async () => {
-        try {
-          const data = await gotChatInCommon(userProfile.id);
-          if (data && data.success) {
-            setChatInCommon(true);
-          } else {
-            setChatInCommon(false);
-          }
+        try { 
+          if (userProfile.id != localStorage.getItem("userId"))
+          {
+            const data = await gotChatInCommon(userProfile.id);
+            
+            if (data && data.success) {
+              setChatInCommon(true);
+            } else {
+              setChatInCommon(false);
+            }
+        }
         } catch (err) {
           setChatInCommon(false);
         } finally {
@@ -175,7 +179,6 @@ export default function ProfilePage() {
       fetchRecievedLike();
       fetchChatInCommon();
     }, []);
-  
 
   return (
     <MainLayout>

@@ -1,13 +1,33 @@
 import os
 import uuid
 import smtplib
+import re
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash, check_password_hash # type: ignore
 
 from .db import get_db_connection
 from ..Utils.get_base_url import get_backend_base_url, get_frontend_base_url
 
+def validate_email(email):
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(email_regex, email) is not None
+
+def validate_password(password):
+    """
+    Validate password requirements:
+    - At least 8 characters
+    - At least one lowercase letter
+    - At least one uppercase letter  
+    - At least one digit
+    - At least one special character
+    """
+    password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$'
+    return re.match(password_regex, password) is not None
+
 def send_confirmation_email(email, token):
+    if not validate_email(email):
+        return False, "Invalid email format"
+
     smtp_host = os.getenv("EMAIL_HOST")
     smtp_port = int(os.getenv("EMAIL_PORT", 587))
     smtp_user = os.getenv("EMAIL_USER")
@@ -38,6 +58,9 @@ def send_confirmation_email(email, token):
 
 
 def send_reset_email(email, token):
+    if not validate_email(email):
+        return False, "Invalid email format"
+
     smtp_host = os.getenv("EMAIL_HOST")
     smtp_port = int(os.getenv("EMAIL_PORT", 587))
     smtp_user = os.getenv("EMAIL_USER")
@@ -75,6 +98,11 @@ def reset_password_confirm(password, token):
     conn = get_db_connection()
     cur = conn.cursor()
 
+    if not validate_password(new_password):
+        cur.close()
+        conn.close()
+        return False, "Password must contain at least 8 characters, including uppercase, lowercase, number and special character"
+
     cur.execute("SELECT id FROM users WHERE confirm_token = %s", (token,))
     user = cur.fetchone()
     if not user:
@@ -95,6 +123,11 @@ def reset_password_confirm(password, token):
 def reset_password(email):
     conn = get_db_connection()
     cur = conn.cursor()
+
+    if not validate_email(email):
+        cur.close()
+        conn.close()
+        return False, "Invalid email format"
     
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     row = cur.fetchone()
@@ -153,6 +186,16 @@ def confirm_email(token):
 def register_user(username, password, email, first_name, last_name):
     conn = get_db_connection()
     cur = conn.cursor()
+
+    if not validate_email(email):
+        cur.close()
+        conn.close()
+        return False, "Invalid email format"
+
+    if not validate_password(password):
+        cur.close()
+        conn.close()
+        return False, "Password must contain at least 8 characters, including uppercase, lowercase, number and special character"
     
     # Search for already existing username
     cur.execute("SELECT id FROM users WHERE username = %s", 
@@ -171,6 +214,8 @@ def register_user(username, password, email, first_name, last_name):
         return False, "Email already exists"
 
     # Create new user
+
+
     hashed_password = generate_password_hash(password)
     confirm_token = str(uuid.uuid4())
     cur.execute(" INSERT INTO users (username, email, password, first_name, last_name, confirm_token) " \

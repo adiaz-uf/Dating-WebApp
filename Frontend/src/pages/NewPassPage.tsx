@@ -65,7 +65,6 @@ export default function NewPassPage() {
       return;
     }
 
-    /* Password validation - TODO: Commented while developing */
     const passwordCheck = validatePassword(new_password);
     if (!passwordCheck.valid) {
       setError(passwordCheck.message || "Weak password");

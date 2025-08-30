@@ -144,7 +144,6 @@ export default function HomePage() {
     }
   }, [profileData]);
 
-  /* TODO: open data modal */
   useEffect(() => {
     if (profileData && profileData.completed_profile === false) {
       setShowEdit(true);
@@ -224,21 +223,21 @@ export default function HomePage() {
         case "location":
           // Calculate actual distance for sorting
           if (!profileData || profileData.latitude == null || profileData.longitude == null || 
-              a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) {
-            // Fallback to city name comparison if coordinates are missing
-            valA = a.city?.toLowerCase() || "";
-            valB = b.city?.toLowerCase() || "";
-          } else {
-            valA = calculateDistance(
-              Number(profileData.latitude),
-              Number(profileData.longitude),
-              Number(a.latitude),
-              Number(a.longitude)
-            );
-            valB = calculateDistance(
-              Number(profileData.latitude),
-              Number(profileData.longitude),
-              Number(b.latitude),
+            a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) {
+          // Fallback to city name comparison if coordinates are missing
+          valA = a.city?.toLowerCase() || "";
+          valB = b.city?.toLowerCase() || "";
+        } else {
+          valA = calculateDistance(
+            Number(profileData.latitude),
+            Number(profileData.longitude),
+            Number(a.latitude),
+            Number(a.longitude)
+          );
+          valB = calculateDistance(
+            Number(profileData.latitude),
+            Number(profileData.longitude),
+            Number(b.latitude),
               Number(b.longitude)
             );
           }

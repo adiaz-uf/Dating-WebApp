@@ -30,7 +30,6 @@ export const UserCard: React.FC<UserCardProps> = ({ user }) => {
 
   const distance = useMemo(() => {
     if (
-      /* !user.city && TODO */
       loggedUser &&
       user.latitude != null && user.longitude != null &&
       loggedUser.latitude != null && loggedUser.longitude != null

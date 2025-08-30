@@ -37,15 +37,14 @@ export default function LoginPage() {
       return;
     }
 
-    /* Password validation - TODO: Commented while developing */
-    /* if (!validatePassword(password)) {
+    if (!validatePassword(password)) {
       setError(
         "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
       );
       setSuccess(false);
       setTimeout(() => setError(null), 3000);
       return;
-    } */
+    }
 
     try {
       await loginUser({ username, password });

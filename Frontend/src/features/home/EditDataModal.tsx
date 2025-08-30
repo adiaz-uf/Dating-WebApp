@@ -6,6 +6,7 @@ import { MessageBox } from "../../components/MessageBox";
 import { updateUserProfile, fetchUserProfile } from "../../api/profile_service";
 import { uploadProfilePicture, uploadPicture, deletePicture } from "../../api/picture_service";
 import { suggestTags, replaceAllTags } from "../../api/tag_service";
+import { calculateAge } from "../../lib/CalculateAge";
 
 const ResizableInput = ({
   value,
@@ -195,7 +196,7 @@ export default function EditDataModal({
 
   const handleSave = async () => {
     try {
-      /* if (!userProfile.main_img) { TODO: Modal validations
+      if (!userProfile.main_img) {
         setError("Please upload a profile picture");
         return;
       }
@@ -224,12 +225,12 @@ export default function EditDataModal({
       if (!tags || tags.length === 0 || tags.every(t => !t || t.trim().length <= 1)) {
         setError("Please add at least one tag");
         return;
-      } */
+      }
 
-      if (!birth_date) {
-        setBirthdate(toDateInputValue(new Date()));
-        /* setError("Please select your birth date");
-        return; */
+      const age = calculateAge(birth_date);
+      if (birth_date && age !== null && age < 18) {
+        setError("User must be at least 18 years old");
+        return;
       }
 
       const tagsToSend = tags
