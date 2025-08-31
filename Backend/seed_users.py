@@ -107,7 +107,7 @@ def main():
         insert_static_tags(cur)
 
         print("👥 Generating users...")
-        insert_users_and_data(cur, count=500)
+        insert_users_and_data(cur, count=30)
 
         cur.close()
         conn.close()

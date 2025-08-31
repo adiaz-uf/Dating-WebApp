@@ -12,11 +12,11 @@ def get_base_ip():
     
 def get_frontend_base_url():
     ip = get_base_ip()
-    port = 5173
+    port = os.getenv("FRONTEND_PORT")
     return f"http://{ip}:{port}"
 
 
 def get_backend_base_url():
     ip = get_base_ip()
-    port = 3001  # TODO .env
+    port = os.getenv("BACKEND_PORT")
     return f"http://{ip}:{port}"

@@ -276,6 +276,22 @@ def get_is_liked_by_user(session_user_id, user_id):
         cur.close()
         conn.close()
     return jsonify({"success": liked}), 200
+
+def get_is_blocked_by_user(session_user_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT 1 FROM blocks WHERE blocked_id = %s AND blocker_id = %s
+        """,(user_id, session_user_id,))
+        blocked = cur.fetchone() is not None
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+    return jsonify({"success": blocked}), 200
     
 def get_exists_chat_with(session_user_id, user_id):
     conn = get_db_connection()

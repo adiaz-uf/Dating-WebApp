@@ -531,20 +531,9 @@ def set_user_blocked(blocker_user, blocked_user):
                 VALUES (%s, %s)
             """, (blocker_user, blocked_user,))
             
-
-        # Delete chat between users if exists
-        cur.execute("""
-            SELECT c.id FROM chats c
-            JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = %s
-            JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = %s
-        """, (blocker_user, blocked_user))
-        chat = cur.fetchone()
-        if chat:
-            chat_id = chat[0]
-            cur.execute("DELETE FROM messages WHERE chat_id = %s", (chat_id,))
-            cur.execute("DELETE FROM chat_members WHERE chat_id = %s", (chat_id,))
-            cur.execute("DELETE FROM chats WHERE id = %s", (chat_id,))
         conn.commit()
+        set_user_not_liked(blocker_user, blocked_user)
+        
         return jsonify({"success": True, "message": "Profile block added"}), 201
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

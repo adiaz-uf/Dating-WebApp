@@ -307,6 +307,7 @@ export default function EditDataModal({
               type="date"
               value={birth_date}
               onChange={(e) => setBirthdate(e.target.value)}
+              max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
               className="px-4 py-2 border border-pink-400 rounded-md text-pink-600 bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
           />
         </div>

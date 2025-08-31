@@ -17,7 +17,7 @@ import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import { calculateAge } from "../lib/CalculateAge";
 import { isOnline } from "../lib/ActivityUpdater";
 import { useNavigate } from "react-router-dom";
-import { gotChatInCommon, isLikedByUser } from "../api/profile_service";
+import { gotChatInCommon, isBlockedByUser, isLikedByUser } from "../api/profile_service";
 import { getNotificationSocket, connectNotificationSocket, onNotificationSocketRegistered } from "../api/notifications_socket";
 
 export default function ProfilePage() {
@@ -30,6 +30,7 @@ export default function ProfilePage() {
   const [showMatch, setShowMatch] = useState(false);
   const [recievedLike, setRecievedLike] = useState(false);
   const [chatInCommon, setChatInCommon] = useState(false);
+  const [recievedBlock, setRecievedBlock] = useState(false);
   const navigate = useNavigate();
 
   if (!userProfile) return <div>No profile data.</div>;
@@ -176,8 +177,22 @@ export default function ProfilePage() {
         } finally {
         }
       };
+      const fetchRecievedBlock = async () => {
+        try {
+          const data = await isBlockedByUser(userProfile.id);
+          if (data && data.success) {
+            setRecievedBlock(true);
+          } else {
+            setRecievedBlock(false);
+          }
+        } catch (err) {
+          setRecievedBlock(false);
+        } finally {
+        }
+      };
       fetchRecievedLike();
       fetchChatInCommon();
+      fetchRecievedBlock();
     }, []);
 
   return (
@@ -283,7 +298,7 @@ export default function ProfilePage() {
         <div className="w-50 h-50">
           <Avatar src={userProfile.main_img} />
         </div>
-        {!isOwnProfile && (
+        {!isOwnProfile && !recievedBlock && (
           <div className="flex gap-6 mt-2">
           {userProfile.liked ? (
             <div className="relative group">
@@ -342,6 +357,13 @@ export default function ProfilePage() {
               </span>
             </div>
           )}
+          </div>
+        )}
+        {!isOwnProfile && recievedBlock && (
+          <div className="flex justify-center mt-4">
+            <span className="text-red-600 font-semibold text-lg bg-red-100 px-4 py-2 rounded-lg border border-red-300">
+              User Blocked
+            </span>
           </div>
         )}
         <div className="flex flex-wrap gap-3 items-center justify-center my-6">

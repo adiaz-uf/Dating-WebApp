@@ -32,21 +32,25 @@ def get_google_authorization_url():
 
 
 def handle_google_callback(authorization_response, state):
-    redirect_url = f"{get_backend_base_url()}{os.getenv("GOOGLE_REDIRECT_URI")}"
-    google = OAuth2Session(
-        GOOGLE_CLIENT_ID,
-        state=state,
-        redirect_uri=redirect_url
-    )
-    token = google.fetch_token(
-        GOOGLE_TOKEN_URL,
-        client_secret=GOOGLE_CLIENT_SECRET,
-        authorization_response=authorization_response
-    )
+    try:
+        redirect_url = f"{get_backend_base_url()}{os.getenv("GOOGLE_REDIRECT_URI")}"
+        google = OAuth2Session(
+            GOOGLE_CLIENT_ID,
+            state=state,
+            redirect_uri=redirect_url
+        )
+        token = google.fetch_token(
+            GOOGLE_TOKEN_URL,
+            client_secret=GOOGLE_CLIENT_SECRET,
+            authorization_response=authorization_response
+        )
 
-    resp = google.get(GOOGLE_USERINFO_URL)
-    if resp.status_code != 200:
-        return False, "Failed to fetch user info"
+        resp = google.get(GOOGLE_USERINFO_URL)
+        if resp.status_code != 200:
+            return False, "Failed to fetch user info"
+    except Exception as e:
+        print(f"Google OAuth error: {str(e)}")
+        return False, f"OAuth authentication failed: {str(e)}"
 
     info = resp.json()
     email = info["email"]
@@ -94,21 +98,25 @@ def get_intra42_authorization_url():
 
 
 def handle_intra42_callback(authorization_response, state):
-    redirect_url = f"{get_backend_base_url()}{os.getenv("INTRA42_REDIRECT_URI")}"
-    intra42 = OAuth2Session(
-        INTRA42_CLIENT_ID,
-        state=state,
-        redirect_uri=redirect_url
-    )
-    token = intra42.fetch_token(
-        INTRA42_TOKEN_URL,
-        client_secret=INTRA42_CLIENT_SECRET,
-        authorization_response=authorization_response
-    )
+    try:
+        redirect_url = f"{get_backend_base_url()}{os.getenv("INTRA42_REDIRECT_URI")}"
+        intra42 = OAuth2Session(
+            INTRA42_CLIENT_ID,
+            state=state,
+            redirect_uri=redirect_url
+        )
+        token = intra42.fetch_token(
+            INTRA42_TOKEN_URL,
+            client_secret=INTRA42_CLIENT_SECRET,
+            authorization_response=authorization_response
+        )
 
-    resp = intra42.get(INTRA42_USERINFO_URL)
-    if resp.status_code != 200:
-        return False, "Failed to fetch user info"
+        resp = intra42.get(INTRA42_USERINFO_URL)
+        if resp.status_code != 200:
+            return False, "Failed to fetch user info"
+    except Exception as e:
+        print(f"Intra42 OAuth error: {str(e)}")
+        return False, f"OAuth authentication failed: {str(e)}"
 
     profile = resp.json()
     email = profile["email"]

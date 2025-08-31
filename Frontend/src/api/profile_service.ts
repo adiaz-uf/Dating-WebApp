@@ -115,6 +115,21 @@ export async function isLikedByUser(user_id: any) {
   return response.json();
 }
 
+export async function isBlockedByUser(user_id: any) {
+  const url =`${API_URL}/profile/blocked-by/${user_id}`;
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Fetching is user blocked by failed");
+  }
+
+  return response.json();
+}
+
 export async function gotChatInCommon(user_id: any) {
   const url =`${API_URL}/profile/chat-with/${user_id}`;
   const response = await fetch(url, {
