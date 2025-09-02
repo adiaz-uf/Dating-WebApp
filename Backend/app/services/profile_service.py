@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session # type: ignore
 import requests
+import re
 from .db import get_db_connection
 
 profile_bp = Blueprint("profile", __name__)
@@ -101,13 +102,35 @@ def update_profile_data(user_id, data):
         "completed_profile"
     }
 
+    # Define allowed values for gender and sexual_preferences
+    allowed_genders = {"Male", "Female", "Non-binary"}
+    allowed_orientations = {"Heterosexual", "Homosexual", "Bisexual"}
+
     fields_to_update = []
     values = []
 
     for field in allowed_fields:
         if field in data:
+            value = data[field]
+            # Validate not empty for string fields
+            if field in {"first_name", "last_name", "email", "biography"}:
+                if value is not None and isinstance(value, str) and value.strip() == "":
+                    return jsonify({"success": False, "message": f"{field.replace('_', ' ').capitalize()} cannot be empty"}), 400
+            # Validate email format
+            if field == "email" and value is not None and value != "":
+                email_regex = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+                if not re.match(email_regex, value):
+                    return jsonify({"success": False, "message": "Invalid email format"}), 400
+            # Validate gender
+            if field == "gender":
+                if value is not None and value not in allowed_genders:
+                    return jsonify({"success": False, "message": f"Invalid gender: {value}"}), 400
+            # Validate sexual_preferences
+            if field == "sexual_preferences":
+                if value is not None and value not in allowed_orientations:
+                    return jsonify({"success": False, "message": f"Invalid sexual preference: {value}"}), 400
             fields_to_update.append(f"{field} = %s")
-            values.append(data[field])
+            values.append(value)
 
     if not fields_to_update:
         return jsonify({"success": False, "message": "No fields to update"}), 400

@@ -170,13 +170,51 @@ export default function EditProfileModal({
   const handleCommitTag = async (index: number, val: string) => {
     const normalizedVal = val.trim().replace(/^#+/, '').toLowerCase();
     const formattedVal = '#' + normalizedVal;
-    const normalizedTags = tags.map((t, i) => i === index ? normalizedVal : t.trim().replace(/^#+/, '').toLowerCase());
     
-    if (normalizedVal.length <= 0 || normalizedTags.filter(t => t === normalizedVal).length > 1) {
-      setError("Empty or existing tag");
+    // Check for empty tag
+    if (normalizedVal.length <= 0) {
+      setError("Tag cannot be empty");
+      setShowError(true);
+      // Revert to previous value or remove if it was new
+      setTags(prevTags => {
+        const newTags = [...prevTags];
+        if (userProfile.tags && userProfile.tags[index]) {
+          newTags[index] = '#' + userProfile.tags[index];
+        } else {
+          newTags.splice(index, 1);
+        }
+        return newTags;
+      });
+      return;
+    }
+    
+    // Check for duplicates (excluding the current index)
+    const otherTags = tags
+      .map((t, i) => i !== index ? t.trim().replace(/^#+/, '').toLowerCase() : null)
+      .filter(t => t !== null);
+    
+    if (otherTags.includes(normalizedVal)) {
+      setError("Tag already exists");
+      setShowError(true);
+      // Revert to previous value or remove if it was new
+      setTags(prevTags => {
+        const newTags = [...prevTags];
+        if (userProfile.tags && userProfile.tags[index]) {
+          newTags[index] = '#' + userProfile.tags[index];
+        } else {
+          newTags.splice(index, 1);
+        }
+        return newTags;
+      });
       return;
     }
 
+    // Clear any previous error only when validation passes
+    if (error) {
+      setError(null);
+      setShowError(false);
+    }
+    
     setTags(prevTags => {
       const newTags = [...prevTags];
       newTags[index] = formattedVal;
@@ -194,9 +232,10 @@ export default function EditProfileModal({
 
   const handleSave = async () => {
     try {
-      const tagsToSend = tags
-        .map(t => t.trim().replace(/^#+/, ''))
-        .filter(t => t.length > 0);
+      const tagsToSend = Array.from(new Set(tags
+        .map(t => t.trim().replace(/^#+/, '').toLowerCase())
+        .filter(t => t.length > 0)
+      ));
       await replaceAllTags(tagsToSend);
 
       const updatedProfile = {

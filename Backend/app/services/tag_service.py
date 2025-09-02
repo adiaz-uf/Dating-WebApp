@@ -58,19 +58,27 @@ def add_or_update_tag(user_id, tag_name, index):
         cur.close()
         conn.close()
 
-# POST
 def replace_all_tags(user_id, tags):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
+        # Remove duplicates from tags list (case-insensitive)
+        unique_tags = []
+        seen = set()
+        for tag_name in tags:
+            clean_tag_name = tag_name.lstrip('#').strip().lower()
+            if clean_tag_name and clean_tag_name not in seen:
+                unique_tags.append(clean_tag_name)
+                seen.add(clean_tag_name)
+        
+        # Limit to 5 tags maximum
+        if len(unique_tags) > 5:
+            return jsonify({"success": False, "message": "Maximum 5 tags allowed"}), 400
+        
         # delete all tags
         cur.execute("DELETE FROM user_tags WHERE user_id = %s", (user_id,))
         # Insert new tags
-        for idx, tag_name in enumerate(tags):
-            clean_tag_name = tag_name.lstrip('#').strip().lower()
-            if not clean_tag_name:
-                continue
-    
+        for idx, clean_tag_name in enumerate(unique_tags):
             cur.execute("SELECT id FROM tags WHERE name = %s", (clean_tag_name,))
             tag = cur.fetchone()
             if tag:
