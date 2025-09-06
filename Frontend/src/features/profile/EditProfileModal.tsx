@@ -113,7 +113,7 @@ const ResizableInput = ({
 
 interface EditProfileModalProps {
   onClose: () => void;
-  onSaveSuccess?: () => void;
+  onSaveSuccess?: (msg: string) => void;
   onSaveError?: (msg: string) => void;
 }
 
@@ -254,7 +254,7 @@ export default function EditProfileModal({
         ctx.setUserProfile({ ...updatedProfile, tags: formatTags(tagsToSend) });
       }
       setTags(formatTags(tagsToSend));
-      onSaveSuccess?.();
+      onSaveSuccess?.("Profile updated");
       onClose();
     } catch (error: any) {
       onSaveError?.(error.message || "An unknown error occurred.");

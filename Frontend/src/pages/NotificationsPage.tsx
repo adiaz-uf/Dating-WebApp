@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { FaHeart, FaRegEye, FaUser, FaEye } from "react-icons/fa";
 import { BiDislike } from "react-icons/bi";
 import { IoChatbubblesOutline } from "react-icons/io5";
@@ -37,6 +37,9 @@ export default function NotificationsPageWithProfileProvider() {
 
   if (loading) return <div>Loading...</div>;
   if (!profile) return <div>Error loading profile.</div>;
+  if (profile && profile.completed_profile === false) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <ProfileProvider profileData={profile} loggedInUserId={profile.id}>

@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const [showInteractions, setShowInteractions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [showMatch, setShowMatch] = useState(false);
   const [recievedLike, setRecievedLike] = useState(false);
   const [chatInCommon, setChatInCommon] = useState(false);
@@ -199,7 +199,7 @@ export default function ProfilePage() {
     <MainLayout>
       <div className="absolute top-4 right-4 z-50 space-y-2">
         {error && <MessageBox type="error" message={error} show={!!error} />}
-        {success && <MessageBox type="success" message="Saved Changes." show={success} />}
+        {success && <MessageBox type="success" message={success} show={!!success} />}
         {showMatch && <MessageBox type="match" message="¡Its a match! Now you can chat with your new match!!" show={showMatch} />}
       </div>
       <div className="absolute top-20 left-4 md:right-8 space-y-2 flex gap-3">
@@ -418,17 +418,22 @@ export default function ProfilePage() {
         )}
         {showEdit && (
           <EditProfileModal
-            onClose={() => setShowEdit(false)}
-            onSaveSuccess={() => {
-              setSuccess(true);
+            onClose={() => {
+              setShowEdit(false);
+              window.location.reload();
+            }}
+            onSaveSuccess={(msg) => {
+              setSuccess(msg);
               setError(null);
               setShowEdit(false);
-              setTimeout(() => setSuccess(false), 3000);
+              setTimeout(() => setSuccess(null), 3000);
+              window.location.reload();
             }}
             onSaveError={(msg) => {
               setError(msg);
-              setSuccess(false);
+              setSuccess(null);
               setTimeout(() => setError(null), 3000);
+              window.location.reload();
             }}
           />
         )}

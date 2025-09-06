@@ -1,45 +1,69 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-
 import { ProfileProvider } from "./ProfileContext";
 import ProfilePage from "../../pages/ProfilePage";
 import { fetchUserProfile } from "../../api/profile_service";
 import type { UserProfile } from "./types";
 
-
 export default function ProfileRouteWrapper() {
   const [profileData, setProfileData] = useState<UserProfile | undefined>(undefined);
+  const [authProfile, setAuthProfile] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { userId } = useParams();
 
   useEffect(() => {
+    let isMounted = true;
     setLoading(true);
-    fetchUserProfile(userId)
-      .then((data) => {
-        let profile = data.profile || data;
-        if (Array.isArray(profile)) {
-          profile = {
-            id: profile[0],
-            email: profile[1],
-            username: profile[2],
-            first_name: profile[3],
-            last_name: profile[4],
-            biography: profile[5],
-            gender: profile[6],
-            sexual_preferences: profile[7],
+    // Fetch both the profile being viewed and the authenticated user's profile
+    Promise.all([
+      fetchUserProfile(userId),
+      fetchUserProfile() // no param: fetches authenticated user
+    ])
+      .then(([viewedData, authData]) => {
+        let viewedProfile = viewedData.profile || viewedData;
+        if (Array.isArray(viewedProfile)) {
+          viewedProfile = {
+            id: viewedProfile[0],
+            email: viewedProfile[1],
+            username: viewedProfile[2],
+            first_name: viewedProfile[3],
+            last_name: viewedProfile[4],
+            biography: viewedProfile[5],
+            gender: viewedProfile[6],
+            sexual_preferences: viewedProfile[7],
           };
         }
-        setProfileData(profile);
+        let authProfileObj = authData.profile || authData;
+        if (Array.isArray(authProfileObj)) {
+          authProfileObj = {
+            id: authProfileObj[0],
+            email: authProfileObj[1],
+            username: authProfileObj[2],
+            first_name: authProfileObj[3],
+            last_name: authProfileObj[4],
+            biography: authProfileObj[5],
+            gender: authProfileObj[6],
+            sexual_preferences: authProfileObj[7],
+          };
+        }
+        if (isMounted) {
+          setProfileData(viewedProfile);
+          setAuthProfile(authProfileObj);
+        }
       })
       .catch((err) => navigate("/login"))
-      .finally(() => setLoading(false));
+      .finally(() => { if (isMounted) setLoading(false); });
+    return () => { isMounted = false; };
   }, [userId]);
 
-  if (loading || !profileData) return <div>Loading...</div>;
-  if (!profileData.completed_profile) return <Navigate to="/" replace />;
-  
-  const loggedInUserId = localStorage.getItem("userId") ?? "";
+  if (loading || !profileData || !authProfile) return <div>Loading...</div>;
+  const loggedInUserId = authProfile.id;
+
+  // If the authenticated user's profile is not completed, redirect to home (block all profile views)
+  if (!authProfile.completed_profile) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <ProfileProvider profileData={profileData} loggedInUserId={loggedInUserId}>

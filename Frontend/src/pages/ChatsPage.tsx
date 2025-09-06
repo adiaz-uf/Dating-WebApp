@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchUserChats } from "../api/chat_service";
 import { fetchUserProfile } from "../api/profile_service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChatLayout } from "../layouts/ChatLayout";
 import { ChatList } from "../features/chat/ChatList";
@@ -16,12 +16,14 @@ export default function ChatsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
   
   // Check if user is logged in, else redirect to login
   useEffect(() => {
     const checkProfile = async () => {
       try {
-        await fetchUserProfile();
+        const data = await fetchUserProfile();
+        setProfileData(data.profile || data);
         setProfileChecked(true);
       } catch (err) {
         navigate("/login");
@@ -109,6 +111,9 @@ export default function ChatsPage() {
   };
 
   if (!profileChecked) return null;
+  if (profileData && profileData.completed_profile === false) {
+    return <Navigate to="/" replace />;
+  }
   if (loading) return <div className="p-8 text-center">Cargando chats...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 

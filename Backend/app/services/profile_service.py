@@ -91,6 +91,16 @@ def get_profile_data(user_id):
 
 # PATCH /profile
 def update_profile_data(user_id, data):
+
+    # Fetch user to check if oauth is enabled
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT oauth FROM users WHERE id = %s", (user_id,))
+    user_row = cur.fetchone()
+    oauth_enabled = user_row[0] if user_row else False
+    cur.close()
+    conn.close()
+
     allowed_fields = {
         "first_name",
         "last_name",
@@ -111,6 +121,9 @@ def update_profile_data(user_id, data):
 
     for field in allowed_fields:
         if field in data:
+            # Prevent email change if oauth is enabled
+            if field == "email" and oauth_enabled:
+                continue
             value = data[field]
             # Validate not empty for string fields
             if field in {"first_name", "last_name", "email", "biography"}:
@@ -154,6 +167,7 @@ def update_profile_data(user_id, data):
     finally:
         cur.close()
         conn.close()
+
 
     return jsonify({"success": True, "message": "Profile updated"}), 200
 

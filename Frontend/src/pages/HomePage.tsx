@@ -17,7 +17,6 @@ import { calculateAge } from "../lib/CalculateAge";
 import { calculateDistance } from "../lib/CalculateDistance";
 
 export default function HomePage() {
-  const [showEdit, setShowEdit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [profileData, setProfileData] = useState<UserProfile | undefined>(undefined);
@@ -144,12 +143,12 @@ export default function HomePage() {
     }
   }, [profileData]);
 
-  useEffect(() => {
+/*   useEffect(() => {
     if (profileData && profileData.completed_profile === false) {
       setShowEdit(true);
     }
   }, [profileData]);
-
+ */
 
   type FiltersType = typeof defaultFilters;
   const handleInputChange = (field: string, value: any) => {
@@ -287,6 +286,30 @@ export default function HomePage() {
   if (loading) return <div>Loading profile...</div>;
   if (!profileData) return <div>Error loading profile. Please try again later.</div>;
 
+  // If profile is not completed, block all UI except the modal, but wrap in ProfileProvider
+  if (!profileData.completed_profile) {
+    return (
+      <ProfileProvider profileData={profileData} loggedInUserId={profileData.id}>
+        <EditDataModal
+          onClose={() => {
+            // Do not allow closing the modal if not completed
+          }}
+          onSaveSuccess={() => {
+            setSuccess(true);
+            setError(null);
+            window.location.reload();
+            setTimeout(() => setSuccess(false), 3000);
+          }}
+          onSaveError={(msg) => {
+            setError(msg);
+            setSuccess(false);
+            setTimeout(() => setError(null), 3000);
+          }}
+        />
+      </ProfileProvider>
+    );
+  }
+
   return (
     <ProfileProvider profileData={profileData} loggedInUserId={profileData.id}>
       <MainLayout>
@@ -326,27 +349,6 @@ export default function HomePage() {
               onUserClick={handleUserMapClick}
             />
           </div>
-
-        {showEdit && (
-          <EditDataModal
-            onClose={() => {
-              setShowEdit(false);
-              window.location.reload(); // Force reload to refresh suggested users and profile
-            }}
-            onSaveSuccess={() => {
-              setSuccess(true);
-              setError(null);
-              setShowEdit(false);
-              window.location.reload(); // Also reload after successful save
-              setTimeout(() => setSuccess(false), 3000);
-            }}
-            onSaveError={(msg) => {
-              setError(msg);
-              setSuccess(false);
-              setTimeout(() => setError(null), 3000);
-            }}
-          />
-        )}
       </MainLayout>
     </ProfileProvider>
   );
