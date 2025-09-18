@@ -26,14 +26,17 @@ export const ProfileInfoCard = () => {
 			  </div>
 			</CardContent>
 		  </Card>
-		  <Card className="!bg-pink-100">
-			<CardContent className="!p-4">
-			  <div className="flex flex-wrap gap-2 justify-center">
-				<label className="text-md">email: </label>
-				<label className="text-md">{userProfile.email} </label>
-			  </div>
-			</CardContent>
-		  </Card>
+		  {
+			!userProfile.oauth && 
+			<Card className="!bg-pink-100">
+				<CardContent className="!p-4">
+				<div className="flex flex-wrap gap-2 justify-center">
+					<label className="text-md">email: </label>
+					<label className="text-md">{userProfile.email} </label>
+				</div>
+				</CardContent>
+			</Card>
+		  }
 		  <Card className="!bg-pink-100">
 			<CardContent className="!p-4">
 			  <div className="flex flex-wrap gap-2 justify-center">

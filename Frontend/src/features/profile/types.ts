@@ -1,4 +1,5 @@
 export interface UserProfile {
+	oauth: boolean;
   last_active: any;
   city: string;
   fame_rating: ReactNode;

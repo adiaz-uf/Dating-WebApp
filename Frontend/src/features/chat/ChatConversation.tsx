@@ -355,7 +355,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ chat, onBack
               className={`flex ${message.sent ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg shadow ${
+                className={`max-w-xs px-4 py-2 rounded-lg shadow break-words whitespace-pre-wrap${
                   message.sent
                     ? "bg-pink-200 text-right text-black"
                     : "bg-gray-100 text-left text-black"

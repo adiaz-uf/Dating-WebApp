@@ -10,7 +10,7 @@ def register():
     password = data.get("password")
     email = data.get("email")
     first_name = data.get("first_name")
-    last_name = data.get("last")
+    last_name = data.get("last_name")
     success, message = register_user(username, password, email, first_name, last_name)
     return jsonify({"success": success, "message": message}), 200 if success else 400
 
