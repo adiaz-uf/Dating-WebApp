@@ -44,9 +44,9 @@ Matcha is a feature-rich dating platform where users can:
   - Online/offline status indicators
  
 <p align="center">
-  <img width="680" alt="Image 1" src="https://github.com/user-attachments/assets/30c7d0b3-75fa-418f-9a78-f491e0cdc059" />
-  <img width="170" alt="Image 2" src="https://github.com/user-attachments/assets/25773cfd-ed42-44b5-aa0d-5f61039670ed" />
-  <img width="170" alt="Image 2" src="https://github.com/user-attachments/assets/d0b2068e-e684-45a6-85d8-2d7d6d08d544" />
+  <img width="670" alt="Image 1" src="https://github.com/user-attachments/assets/30c7d0b3-75fa-418f-9a78-f491e0cdc059" />
+  <img width="165" alt="Image 2" src="https://github.com/user-attachments/assets/25773cfd-ed42-44b5-aa0d-5f61039670ed" />
+  <img width="165" alt="Image 2" src="https://github.com/user-attachments/assets/d0b2068e-e684-45a6-85d8-2d7d6d08d544" />
 </p>
   
 - **🔔 Live Notification System:** Real-time notifications for:
