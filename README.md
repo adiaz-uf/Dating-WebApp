@@ -10,6 +10,11 @@ Matcha is a feature-rich dating platform where users can:
 
 ### Core Features
 - **🔐 Secure Authentication:** Email registration with confirmation, password recovery, and OAuth integration (Google & 42 Intra)
+
+\_Login screen
+<img width="1920" height="1032" alt="Image" src="https://github.com/user-attachments/assets/de18ac62-5311-40c2-8aeb-bfa9fbab62e0" />
+<img width="320" height="697" alt="Image" src="https://github.com/user-attachments/assets/05dcd5dd-f027-42c2-9c55-dee545de3b9b" />
+
 - **👤 Complete Profile System:** Customizable profiles with photos, biography, tags, location, and personal preferences
 - **🎯 Smart Matching Algorithm:** Advanced user suggestions based on:
   - Sexual orientation compatibility
