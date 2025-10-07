@@ -21,7 +21,7 @@ Matcha is a feature-rich dating platform where users can:
 
 <p align="center">
   <img width="795" alt="Image 1" src="https://github.com/user-attachments/assets/5adc6458-0e42-4538-8590-a935bd1a479b" />
-  <img width="200" alt="Image 2" src="https://github.com/user-attachments/assets/30139525-c6a4-41fd-9b9e-3a89dbadf3f2" />
+  <img width="202" alt="Image 2" src="https://github.com/user-attachments/assets/30139525-c6a4-41fd-9b9e-3a89dbadf3f2" />
 </p>
 
 - **🎯 Smart Matching Algorithm:** Advanced user suggestions based on:
@@ -44,9 +44,9 @@ Matcha is a feature-rich dating platform where users can:
   - Online/offline status indicators
  
 <p align="center">
-  <img width="650" alt="Image 1" src="https://github.com/user-attachments/assets/30c7d0b3-75fa-418f-9a78-f491e0cdc059" />
-  <img width="160" alt="Image 2" src="https://github.com/user-attachments/assets/25773cfd-ed42-44b5-aa0d-5f61039670ed" />
-  <img width="160" alt="Image 2" src="https://github.com/user-attachments/assets/d0b2068e-e684-45a6-85d8-2d7d6d08d544" />
+  <img width="680" alt="Image 1" src="https://github.com/user-attachments/assets/30c7d0b3-75fa-418f-9a78-f491e0cdc059" />
+  <img width="170" alt="Image 2" src="https://github.com/user-attachments/assets/25773cfd-ed42-44b5-aa0d-5f61039670ed" />
+  <img width="170" alt="Image 2" src="https://github.com/user-attachments/assets/d0b2068e-e684-45a6-85d8-2d7d6d08d544" />
 </p>
   
 - **🔔 Live Notification System:** Real-time notifications for:
