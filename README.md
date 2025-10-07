@@ -13,7 +13,7 @@ Matcha is a feature-rich dating platform where users can:
 
 
 <p align="center">
-  <img width="400" alt="Image 1" src="https://github.com/user-attachments/assets/de18ac62-5311-40c2-8aeb-bfa9fbab62e0" />
+  <img width="800" alt="Image 1" src="https://github.com/user-attachments/assets/de18ac62-5311-40c2-8aeb-bfa9fbab62e0" />
   <img width="200" alt="Image 2" src="https://github.com/user-attachments/assets/05dcd5dd-f027-42c2-9c55-dee545de3b9b" />
 </p>
 
