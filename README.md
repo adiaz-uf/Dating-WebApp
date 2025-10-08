@@ -10,29 +10,67 @@ Matcha is a feature-rich dating platform where users can:
 
 ### Core Features
 - **🔐 Secure Authentication:** Email registration with confirmation, password recovery, and OAuth integration (Google & 42 Intra)
+
+
+<p align="center">
+  <img width="800" alt="Image 1" src="https://github.com/user-attachments/assets/de18ac62-5311-40c2-8aeb-bfa9fbab62e0" />
+  <img width="198" alt="Image 2" src="https://github.com/user-attachments/assets/05dcd5dd-f027-42c2-9c55-dee545de3b9b" />
+</p>
+
 - **👤 Complete Profile System:** Customizable profiles with photos, biography, tags, location, and personal preferences
+
+<p align="center">
+  <img width="795" alt="Image 1" src="https://github.com/user-attachments/assets/5adc6458-0e42-4538-8590-a935bd1a479b" />
+  <img width="202" alt="Image 2" src="https://github.com/user-attachments/assets/30139525-c6a4-41fd-9b9e-3a89dbadf3f2" />
+</p>
+
 - **🎯 Smart Matching Algorithm:** Advanced user suggestions based on:
   - Sexual orientation compatibility
   - Geographic proximity (with distance calculation)
   - Shared interests and tags
   - Fame rating and popularity
   - Age preferences
+ 
+<p align="center">
+  <img width="800" alt="Image 1" src="https://github.com/user-attachments/assets/f93a08d6-c687-4846-9e0f-315769e6c627" />
+  <img width="198" alt="Image 2" src="https://github.com/user-attachments/assets/418eeff9-6523-4f99-93f6-e276eafacceb" />
+</p>
+    
 - **💬 Real-Time Chat System:** Instant messaging with:
   - Text messages with profanity filtering
   - Voice message recording and playback
   - Audio file uploads (MP3, WAV, MP4, AAC, OGG, WebM)
   - Event scheduling within chats
   - Online/offline status indicators
+ 
+<p align="center">
+  <img width="670" alt="Image 1" src="https://github.com/user-attachments/assets/30c7d0b3-75fa-418f-9a78-f491e0cdc059" />
+  <img width="165" alt="Image 2" src="https://github.com/user-attachments/assets/25773cfd-ed42-44b5-aa0d-5f61039670ed" />
+  <img width="165" alt="Image 2" src="https://github.com/user-attachments/assets/d0b2068e-e684-45a6-85d8-2d7d6d08d544" />
+</p>
+  
 - **🔔 Live Notification System:** Real-time notifications for:
   - Profile likes and dislikes
   - Profile views
   - Messages and voice messages
   - Matches and events
+ 
+<p align="center">
+  <img width="198" alt="Image 1" src="https://github.com/user-attachments/assets/5c562f5f-fd9a-4d2c-b8ad-fdc4b137c71d" />
+  <img width="800" alt="Image 2" src="https://github.com/user-attachments/assets/abdfa5bd-f840-45ba-b588-ed06d0c8fe03" />
+</p>
+  
 - **🗺️ Interactive Geolocation:**
   - Automatic location detection via GPS
   - IP-based fallback location
   - Manual location selection with interactive maps
   - Distance-based filtering and sorting
+ 
+<p align="center">
+  <img width="800" alt="Image 1" src="https://github.com/user-attachments/assets/f4bcf7b6-9140-48f6-bb40-05a57c576803" />
+  <img width="198" alt="Image 2" src="https://github.com/user-attachments/assets/07b3cf66-69dd-4126-9344-ff50eceb8be0" />
+</p>
+
 - **🔍 Advanced Search & Filtering:**
   - Age range filtering
   - Distance-based proximity search
