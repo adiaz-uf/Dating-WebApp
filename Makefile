@@ -34,7 +34,7 @@ down: stop
 	
 remove_data:
 	@echo "$(GREEN) --- REMOVING DATA  --- $(COLOR_OFF)"
-	@rm -rf $(DATA_PATH)
+	#@rm -rf $(DATA_PATH)
 	@rm -rf $(UPLOADS_PATH)
 
 fclean: down remove_data

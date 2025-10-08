@@ -12,11 +12,11 @@ import math
 load_dotenv()
 
 DB_CONFIG = {
-    "host": os.getenv("POSTGRESQL_HOST"),
-    "port": os.getenv("POSTGRESQL_PORT"),
-    "database": os.getenv("POSTGRESQL_DATABASE"),
-    "user": os.getenv("POSTGRESQL_USER"),
-    "password": os.getenv("POSTGRESQL_PASSWORD"),
+    "host": os.getenv("POSTGRES_HOST"),
+    "port": os.getenv("POSTGRES_PORT"),
+    "database": os.getenv("POSTGRES_DB"),
+    "user": os.getenv("POSTGRES_USER"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
 }
 
 TAGS = ['music', 'travel', 'fitness', 'reading', 'cooking', 'gym', 'code', 'football', 'pets']

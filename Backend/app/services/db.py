@@ -3,10 +3,10 @@ import os
 
 def get_db_connection():
     conn = psycopg2.connect(
-        dbname=os.getenv("POSTGRESQL_DATABASE"),
-        user=os.getenv("POSTGRESQL_USER"),
-        password=os.getenv("POSTGRESQL_PASSWORD"),
-        host=os.getenv("POSTGRESQL_HOST"),
-        port=os.getenv("POSTGRESQL_PORT")
+        dbname=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+        host=os.getenv("POSTGRES_HOST"),
+        port=os.getenv("POSTGRES_PORT")
     )
     return conn
