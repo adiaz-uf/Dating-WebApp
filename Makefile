@@ -12,7 +12,6 @@ all: build
 
 volumes:
 	@echo "$(GREEN) --- CREATING VOLUMES  --- $(COLOR_OFF)"
-	@mkdir -p $(DATA_PATH)
 	@mkdir -p $(POSTGRESQL_VOLUME_PATH)
 	@mkdir -p $(UPLOADS_PATH)
 
@@ -34,7 +33,6 @@ down: stop
 	
 remove_data:
 	@echo "$(GREEN) --- REMOVING DATA  --- $(COLOR_OFF)"
-	#@rm -rf $(DATA_PATH)
 	@rm -rf $(UPLOADS_PATH)
 
 fclean: down remove_data

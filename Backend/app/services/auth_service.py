@@ -25,69 +25,83 @@ def validate_password(password):
     return re.match(password_regex, password) is not None
 
 def send_confirmation_email(email, token):
+    """Send confirmation email. Returns (success, message) tuple."""
     if not validate_email(email):
         return False, "Invalid email format"
 
-    smtp_host = os.getenv("EMAIL_HOST")
-    smtp_port = int(os.getenv("EMAIL_PORT", 587))
-    smtp_user = os.getenv("EMAIL_USER")
-    smtp_password = os.getenv("EMAIL_PASSWORD")
+    try:
+        smtp_host = os.getenv("EMAIL_HOST")
+        smtp_port = int(os.getenv("EMAIL_PORT", 587))
+        smtp_user = os.getenv("EMAIL_USER")
+        smtp_password = os.getenv("EMAIL_PASSWORD")
 
-    mail_from = os.getenv("MAIL_FROM_ADDRESS")
-    mail_from_name = os.getenv("MAIL_FROM_NAME")
-    base_url = get_frontend_base_url()
-    confirm_link_base = os.getenv("CONFIRM_ACCOUNT_LINK")
+        mail_from = os.getenv("MAIL_FROM_ADDRESS")
+        mail_from_name = os.getenv("MAIL_FROM_NAME")
+        base_url = get_frontend_base_url()
+        confirm_link_base = os.getenv("CONFIRM_ACCOUNT_LINK")
 
-    # build link
-    link = f"{base_url}{confirm_link_base}{token}"
+        # build link
+        link = f"{base_url}{confirm_link_base}{token}"
 
-    # build message
-    message = MIMEText(
-        f"Welcome to {mail_from_name}!\n\n"
-        f"Please confirm your account by clicking this link:\n{link}"
-    )
-    message['Subject'] = "Confirm your account"
-    message['From'] = f"{mail_from_name} <{mail_from}>"
-    message['To'] = email
+        # build message
+        message = MIMEText(
+            f"Welcome to {mail_from_name}!\n\n"
+            f"Please confirm your account by clicking this link:\n{link}"
+        )
+        message['Subject'] = "Confirm your account"
+        message['From'] = f"{mail_from_name} <{mail_from}>"
+        message['To'] = email
 
-    # send mail
-    with smtplib.SMTP(smtp_host, smtp_port) as smtp:
-        smtp.starttls()
-        smtp.login(smtp_user, smtp_password)
-        smtp.send_message(message)
+        # send mail
+        with smtplib.SMTP(smtp_host, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(smtp_user, smtp_password)
+            smtp.send_message(message)
+        
+        return True, "Email sent successfully"
+    except Exception as e:
+        print(f"Warning: Failed to send confirmation email: {e}")
+        return False, f"Failed to send email: {str(e)}"
 
 
 def send_reset_email(email, token):
+    """Send password reset email. Returns (success, message) tuple."""
     if not validate_email(email):
         return False, "Invalid email format"
 
-    smtp_host = os.getenv("EMAIL_HOST")
-    smtp_port = int(os.getenv("EMAIL_PORT", 587))
-    smtp_user = os.getenv("EMAIL_USER")
-    smtp_password = os.getenv("EMAIL_PASSWORD")
+    try:
+        smtp_host = os.getenv("EMAIL_HOST")
+        smtp_port = int(os.getenv("EMAIL_PORT", 587))
+        smtp_user = os.getenv("EMAIL_USER")
+        smtp_password = os.getenv("EMAIL_PASSWORD")
 
-    mail_from = os.getenv("MAIL_FROM_ADDRESS")
-    mail_from_name = os.getenv("MAIL_FROM_NAME")
-    base_url = get_frontend_base_url()
-    reset_link_base = os.getenv("RESET_PASSWORD_LINK")
+        mail_from = os.getenv("MAIL_FROM_ADDRESS")
+        mail_from_name = os.getenv("MAIL_FROM_NAME")
+        base_url = get_frontend_base_url()
+        reset_link_base = os.getenv("RESET_PASSWORD_LINK")
 
-    # build link
-    link = f"{base_url}{reset_link_base}{token}"
+        # build link
+        link = f"{base_url}{reset_link_base}{token}"
 
-    # build message
-    message = MIMEText(
-        f"Hello {mail_from_name}!\n\n"
-        f"Please change your password by clicking this link:\n{link}"
-    )
-    message['Subject'] = "Change your password"
-    message['From'] = f"{mail_from_name} <{mail_from}>"
-    message['To'] = email
+        # build message
+        message = MIMEText(
+            f"Hello {mail_from_name}!\n\n"
+            f"Please change your password by clicking this link:\n{link}"
+        )
+        message['Subject'] = "Change your password"
+        message['From'] = f"{mail_from_name} <{mail_from}>"
+        message['To'] = email
 
-    # send mail
-    with smtplib.SMTP(smtp_host, smtp_port) as smtp:
-        smtp.starttls()
-        smtp.login(smtp_user, smtp_password)
-        smtp.send_message(message)
+        # send mail
+        with smtplib.SMTP(smtp_host, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(smtp_user, smtp_password)
+            smtp.send_message(message)
+        
+        return True, "Email sent successfully"
+    except Exception as e:
+        print(f"Warning: Failed to send reset email: {e}")
+        return False, f"Failed to send email: {str(e)}"
 
 def reset_password_confirm(password, token):
     new_password = password
@@ -144,9 +158,13 @@ def reset_password(email):
     cur.close()
     conn.close()
 
-    send_reset_email(email, reset_token)
-
-    return True, "Password changed, you can now log in."
+    email_sent, email_msg = send_reset_email(email, reset_token)
+    
+    if email_sent:
+        return True, "Password reset email sent. Please check your inbox."
+    else:
+        print(f"Warning: Password reset created but email failed: {email_msg}")
+        return True, "Password reset requested. If email doesn't arrive, please check your email configuration."
 
 
 def confirm_email(token):
@@ -226,9 +244,15 @@ def register_user(username, password, email, first_name, last_name):
     cur.close()
     conn.close()
 
-    send_confirmation_email(email, confirm_token)
-
-    return True, "User registered, please confirm your account"
+    email_sent, email_msg = send_confirmation_email(email, confirm_token)
+    
+    if email_sent:
+        return True, "User registered, please confirm your account via email"
+    else:
+        # Registration succeeded but email failed - still return success
+        # User can request a new confirmation email later
+        print(f"Warning: User registered but confirmation email failed: {email_msg}")
+        return True, "User registered. Email confirmation could not be sent - please check email configuration or contact support."
 
 
 def login_user(username, password):

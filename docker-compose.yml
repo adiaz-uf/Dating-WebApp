@@ -1,6 +1,6 @@
 services:
-  postgresql:
-    container_name: postgresql
+  postgres:
+    container_name: postgres
     build:
         context: ./Docker/PostgreSQL
         dockerfile: Dockerfile
@@ -8,6 +8,7 @@ services:
         - postgresql_volume:/var/lib/postgresql
     networks:
         - matcha-network
+    env_file: .env
     environment:
         POSTGRES_ROOT_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
         POSTGRES_USER: ${POSTGRES_USER}
@@ -43,7 +44,7 @@ services:
         TZ: ${TIMEZONE}
         FLASK_ENV: development
     depends_on:
-        postgresql:
+        postgres:
             condition: service_healthy
     env_file: .env
     ports:
